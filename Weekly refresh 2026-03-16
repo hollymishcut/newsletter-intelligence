@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Newsletter Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: system-ui, -apple-system, sans-serif; min-height: 100vh; }
+  .header { background: #161b22; border-bottom: 1px solid #30363d; padding: 12px 24px; position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .header-title { font-size: 18px; font-weight: 700; color: #58a6ff; }
+  .header-meta { font-size: 11px; color: #8b949e; }
+  .tabs { display: flex; gap: 2px; overflow-x: auto; padding: 0 24px; background: #161b22; border-bottom: 1px solid #30363d; }
+  .tab { padding: 8px 12px; font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent; color: #8b949e; white-space: nowrap; transition: all 0.2s; user-select: none; }
+  .tab:hover { color: #e6edf3; }
+  .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+  .content { padding: 24px; max-width: 1400px; margin: 0 auto; display: none; }
+  .content.active { display: block; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+  .card-title { font-size: 12px; color: #8b949e; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-value { font-size: 28px; font-weight: 700; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #30363d; margin-top: 8px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .pill-blue { background: rgba(88,166,255,0.15); color: #58a6ff; border: 1px solid rgba(88,166,255,0.3); }
+  .pill-green { background: rgba(63,185,80,0.15); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+  .pill-purple { background: rgba(163,113,247,0.15); color: #a371f7; border: 1px solid rgba(163,113,247,0.3); }
+  .pill-yellow { background: rgba(210,153,34,0.15); color: #d29922; border: 1px solid rgba(210,153,34,0.3); }
+  .pill-red { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+  .pill-orange { background: rgba(247,129,102,0.15); color: #f78166; border: 1px solid rgba(247,129,102,0.3); }
+  .signal-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .signal-card.invest { border-left: 3px solid #3fb950; }
+  .signal-card.watch { border-left: 3px solid #d29922; }
+  .signal-card.divest { border-left: 3px solid #f85149; }
+  .signal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .signal-name { font-weight: 600; font-size: 15px; }
+  .signal-badge { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+  .badge-invest { background: rgba(63,185,80,0.2); color: #3fb950; }
+  .badge-watch { background: rgba(210,153,34,0.2); color: #d29922; }
+  .badge-divest { background: rgba(248,81,73,0.2); color: #f85149; }
+  .signal-desc { font-size: 13px; color: #8b949e; line-height: 1.5; }
+  .conviction-bar { margin-top: 10px; }
+  .conviction-label { font-size: 11px; color: #8b949e; margin-bottom: 4px; }
+  .bar-track { height: 6px; background: #30363d; border-radius: 3px; }
+  .bar-fill { height: 6px; border-radius: 3px; }
+  .signal-source { font-size: 11px; color: #58a6ff; margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #21262d; padding: 10px 12px; text-align: left; color: #8b949e; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; }
+  td { padding: 10px 12px; border-bottom: 1px solid #21262d; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #1c2128; }
+  .chart-container { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+  .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+  .change-section { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .change-section h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #30363d; }
+  .change-item { font-size: 13px; color: #e6edf3; padding: 6px 0; border-bottom: 1px solid #21262d; line-height: 1.5; }
+  .change-item:last-child { border-bottom: none; }
+  .change-section.new h3 { color: #3fb950; }
+  .change-section.up h3 { color: #58a6ff; }
+  .change-section.down h3 { color: #f85149; }
+  .change-section.flip h3 { color: #d29922; }
+  .change-section.dropped h3 { color: #8b949e; }
+  .change-section.whitespace h3 { color: #a371f7; }
+  .pred-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .pred-horizon { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .pred-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .pred-body { font-size: 13px; color: #8b949e; line-height: 1.5; margin-bottom: 10px; }
+  .confidence-row { display: flex; align-items: center; gap: 10px; }
+  .confidence-pct { font-size: 13px; font-weight: 700; color: #58a6ff; min-width: 36px; }
+  .person-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .person-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .person-role { font-size: 12px; color: #58a6ff; margin-bottom: 8px; }
+  .person-why { font-size: 13px; color: #8b949e; line-height: 1.5; }
+  .ws-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .ws-tier { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .ws-tier.t1 { color: #3fb950; }
+  .ws-tier.t2 { color: #d29922; }
+  .ws-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .ws-desc { font-size: 13px; color: #8b949e; line-height: 1.5; margin-bottom: 10px; }
+  .ws-ideal { background: #21262d; border-radius: 6px; padding: 10px; font-size: 12px; color: #a371f7; line-height: 1.5; }
+  .ws-ideal-label { font-weight: 600; margin-bottom: 4px; }
+  .funding-card { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #21262d; }
+  .funding-card:last-child { border-bottom: none; }
+  .funding-company { font-weight: 600; font-size: 14px; }
+  .funding-meta { font-size: 12px; color: #8b949e; }
+  .funding-amount { font-size: 15px; font-weight: 700; color: #3fb950; }
+  .funding-round { font-size: 11px; color: #8b949e; text-align: right; }
+  .footer { text-align: center; padding: 24px; color: #8b949e; font-size: 12px; border-top: 1px solid #30363d; margin-top: 24px; }
+  .velocity-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .velocity-name { font-weight: 600; margin-bottom: 6px; }
+  .velocity-bar-row { display: flex; align-items: center; gap: 10px; }
+  .velocity-number { font-size: 12px; color: #8b949e; min-width: 70px; }
+  .source-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #21262d; font-size: 13px; }
+  .source-row:last-child { border-bottom: none; }
+  .source-name { font-weight: 600; }
+  .source-freq { color: #8b949e; font-size: 12px; }
+  .source-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .timeline-item { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .timeline-date { font-size: 11px; color: #58a6ff; margin-bottom: 4px; }
+  .timeline-date.today { color: #3fb950; }
+  .timeline-title { font-weight: 600; margin-bottom: 4px; }
+  .timeline-body { font-size: 13px; color: #8b949e; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="header-title">📬 Newsletter Intelligence Dashboard</div>
+    <div class="header-meta">holly.mishcut@gmail.com &nbsp;·&nbsp; Mar 9–16, 2026 &nbsp;·&nbsp; 32+ newsletters analyzed &nbsp;·&nbsp; 85+ open roles tracked &nbsp;·&nbsp; Last updated: March 16, 2026</div>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" onclick="switchTab('overview',this)">🏠 Overview</div>
+  <div class="tab" onclick="switchTab('vc-signals',this)">📡 VC Signals</div>
+  <div class="tab" onclick="switchTab('predictions',this)">🔮 Predictions</div>
+  <div class="tab" onclick="switchTab('trends',this)">📈 Trends</div>
+  <div class="tab" onclick="switchTab('hiring',this)">💼 Hiring</div>
+  <div class="tab" onclick="switchTab('whitespace',this)">🕳️ Whitespace</div>
+  <div class="tab" onclick="switchTab('velocity',this)">⚡ Velocity</div>
+  <div class="tab" onclick="switchTab('sentiment',this)">📊 Sentiment</div>
+  <div class="tab" onclick="switchTab('people',this)">👤 Key People</div>
+  <div class="tab" onclick="switchTab('competitive',this)">🗺️ Competitive</div>
+  <div class="tab" onclick="switchTab('funding',this)">💰 Funding</div>
+  <div class="tab" onclick="switchTab('changed',this)">🔄 What Changed</div>
+  <div class="tab" onclick="switchTab('sources',this)">📰 Sources</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="content active" id="tab-overview">
+  <div class="grid-4">
+    <div class="card"><div class="card-title">Newsletters Analyzed</div><div class="card-value" style="color:#58a6ff">32</div><div style="font-size:12px;color:#8b949e;margin-top:4px">Mar 9–16, 2026</div></div>
+    <div class="card"><div class="card-title">Open Roles Tracked</div><div class="card-value" style="color:#3fb950">85+</div><div style="font-size:12px;color:#8b949e;margin-top:4px">VC, startup & family office</div></div>
+    <div class="card"><div class="card-title">Funding Rounds Found</div><div class="card-value" style="color:#a371f7">18</div><div style="font-size:12px;color:#8b949e;margin-top:4px">$4.2B+ total disclosed</div></div>
+    <div class="card"><div class="card-title">Dominant Signal</div><div class="card-value" style="color:#d29922">BULLISH</div><div style="font-size:12px;color:#8b949e;margin-top:4px">AI infra & agent platforms</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container"><div class="chart-title">Topic Distribution This Week</div><canvas id="topicDonut" height="220"></canvas></div>
+    <div class="chart-container"><div class="chart-title">Sector Sentiment Scores</div><canvas id="sectorSentiment" height="220"></canvas></div>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title" style="margin-bottom:12px">🔥 Hot Topics This Week</div>
+    <div class="pills">
+      <span class="pill pill-blue">AI Model Avalanche (12+ models)</span>
+      <span class="pill pill-blue">Nvidia GTC 2026 + NemoClaw</span>
+      <span class="pill pill-green">Agentic AI Infrastructure</span>
+      <span class="pill pill-green">Vibe Coding / AI Coding</span>
+      <span class="pill pill-purple">Enterprise ERP Modernization</span>
+      <span class="pill pill-yellow">$1T AI Services Opportunity</span>
+      <span class="pill pill-orange">AI Brain Fry / Cognitive Load</span>
+      <span class="pill pill-red">SaaSpocalypse</span>
+      <span class="pill pill-purple">Datacenter + Energy Thesis</span>
+      <span class="pill pill-green">On-Device AI (iPhone / Qwen 3.5)</span>
+      <span class="pill pill-yellow">YC W26 Demo Day Prep</span>
+      <span class="pill pill-blue">Claude Code / Cowork Adoption</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">🏢 Top Companies Mentioned</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <div style="background:#21262d;border-radius:6px;padding:10px;text-align:center"><div style="font-weight:700">Nvidia</div><div style="font-size:11px;color:#8b949e">GTC + NemoClaw launch</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:10px;text-align:center"><div style="font-weight:700">Replit</div><div style="font-size:11px;color:#8b949e">$400M · $9B valuation</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:10px;text-align:center"><div style="font-weight:700">OpenAI</div><div style="font-size:11px;color:#8b949e">GPT-5.4 · Codex 1.6M WAU</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:10px;text-align:center"><div style="font-weight:700">Anthropic</div><div style="font-size:11px;color:#8b949e">Claude Code $2.5B ARR est.</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:10px;text-align:center"><div style="font-weight:700">SAP</div><div style="font-size:11px;color:#8b949e">AI modernization target</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:10px;text-align:center"><div style="font-weight:700">Legora</div><div style="font-size:11px;color:#8b949e">$550M · $5.55B · Legal AI</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:10px;text-align:center"><div style="font-weight:700">Decagon</div><div style="font-size:11px;color:#8b949e">Acquihiring aggressively</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:10px;text-align:center"><div style="font-weight:700">ElevenLabs</div><div style="font-size:11px;color:#8b949e">Active hiring wave</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- VC SIGNALS -->
+<div class="content" id="tab-vc-signals">
+  <div class="section-title">🟢 INVEST — High Conviction</div>
+  <div class="signal-card invest">
+    <div class="signal-header"><div class="signal-name">Agentic AI Infrastructure</div><span class="signal-badge badge-invest">INVEST</span></div>
+    <div class="signal-desc">Nvidia entering the agent platform space with NemoClaw, announced at GTC 2026 (today, March 16). Competing directly with OpenClaw and LangChain. OpenAI Codex at 1.6M weekly active users (3× since January). Claude Code generating ~$2.5B annualized revenue for Anthropic. GitHub Copilot crossed 20M users. Every major lab is building orchestration infrastructure. Enterprises are budgeting for this layer.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 95/100</div><div class="bar-track"><div class="bar-fill" style="width:95%;background:#3fb950"></div></div></div>
+    <div class="signal-source">Sources: AI Collective Mar 16, VC Corner Mar 15, Bay Area Founders Club</div>
+  </div>
+  <div class="signal-card invest">
+    <div class="signal-header"><div class="signal-name">AI Layer Over Legacy Enterprise Software (SAP / ServiceNow / Salesforce)</div><span class="signal-badge badge-invest">INVEST</span></div>
+    <div class="signal-desc">a16z published a landmark thesis: the $380B system integration market is being disrupted by AI. SAP S/4HANA upgrades cost $700M and take 3 years — AI can compress this dramatically. Named startups building here: Axiamatic, Conduct, Auctor, Supersonik, Tessera. The "AI layer" becomes the user-facing interface while systems of record persist. Sequoia's Julien Bek separately identifies $1T services opportunity (AI delivering finished work, not tools).</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 90/100</div><div class="bar-track"><div class="bar-fill" style="width:90%;background:#3fb950"></div></div></div>
+    <div class="signal-source">Sources: a16z Mar 16, VC Corner Mar 15 (citing Sequoia/Julien Bek)</div>
+  </div>
+  <div class="signal-card invest">
+    <div class="signal-header"><div class="signal-name">AI Coding / Vibe Coding Platforms</div><span class="signal-badge badge-invest">INVEST</span></div>
+    <div class="signal-desc">Replit raised $400M Series D at $9B valuation. VC Corner published a full Replit deep-dive on its $1B moat via vertical integration. Alfred Lin (Sequoia) frames developers as "commanders of AI coding fleets." 76% of developers use or plan to use AI coding tools. On-device Qwen 3.5 (2B on iPhone) will further democratize the developer base.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 88/100</div><div class="bar-track"><div class="bar-fill" style="width:88%;background:#3fb950"></div></div></div>
+    <div class="signal-source">Sources: VC Corner Mar 13 (Replit), AI Collective Mar 16, a16z (Alfred Lin citation)</div>
+  </div>
+  <div class="signal-card invest">
+    <div class="signal-header"><div class="signal-name">AI Legal Tech</div><span class="signal-badge badge-invest">INVEST</span></div>
+    <div class="signal-desc">Legora raised $550M Series D at a $5.55B valuation — massive market validation for AI-powered legal platforms. The legal services market is a prime target for the "AI delivers finished work" thesis. Legal is less crowded than coding tools and has higher per-seat willingness to pay.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 85/100</div><div class="bar-track"><div class="bar-fill" style="width:85%;background:#3fb950"></div></div></div>
+    <div class="signal-source">Sources: VC Corner Hottest Deals Mar 15</div>
+  </div>
+  <div class="signal-card invest">
+    <div class="signal-header"><div class="signal-name">Vector Databases / AI Networking Infrastructure</div><span class="signal-badge badge-invest">INVEST</span></div>
+    <div class="signal-desc">Qdrant raised $50M Series B (open-source vector DB). NextHop AI raised $500M Series B for AI networking infrastructure. Advanced Machine Intelligence raised $1.03B seed. Multiple rounds confirm continued demand for the infrastructure layer beneath models.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 85/100</div><div class="bar-track"><div class="bar-fill" style="width:85%;background:#3fb950"></div></div></div>
+    <div class="signal-source">Sources: VC Corner Hottest Deals Mar 15</div>
+  </div>
+
+  <div class="section-title">🟡 WATCH — Monitor Closely</div>
+  <div class="signal-card watch">
+    <div class="signal-header"><div class="signal-name">Open Source Healthcare AI</div><span class="signal-badge badge-watch">WATCH</span></div>
+    <div class="signal-desc">Nikhil Krishnan (Out-of-Pocket) published specific open-source healthcare categories with whitespace. R1 + Heidi Health strategic partnership. Australian TMRW raised $7M for longevity/biomarkers. Still early but accelerating.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 70/100</div><div class="bar-track"><div class="bar-fill" style="width:70%;background:#d29922"></div></div></div>
+    <div class="signal-source">Sources: Out-of-Pocket Mar 13, This Week in AU Startups Mar 14</div>
+  </div>
+  <div class="signal-card watch">
+    <div class="signal-header"><div class="signal-name">Stablecoin Payments Infrastructure</div><span class="signal-badge badge-watch">WATCH</span></div>
+    <div class="signal-desc">KAST raised $80M (QED + Left Lane). Pay.com.au ASX float at $850M. Macropod $10M (AU). Finally getting institutional traction — but regulatory clarity still uncertain.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 65/100</div><div class="bar-track"><div class="bar-fill" style="width:65%;background:#d29922"></div></div></div>
+    <div class="signal-source">Sources: This Week in AU Startups Mar 14</div>
+  </div>
+  <div class="signal-card watch">
+    <div class="signal-header"><div class="signal-name">Physical Robotics</div><span class="signal-badge badge-watch">WATCH</span></div>
+    <div class="signal-desc">Mind Robotics $500M Series A. Tech Brew: robotaxis going global. Amazon $750M robotics investment in Queensland (1,000 jobs). Cortical Labs launched human brain cell data centre. Massive capital inflow but deployment timelines remain uncertain.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 72/100</div><div class="bar-track"><div class="bar-fill" style="width:72%;background:#d29922"></div></div></div>
+    <div class="signal-source">Sources: Tech Brew Mar 13, VC Corner, This Week in AU Startups</div>
+  </div>
+
+  <div class="section-title">🔴 DIVEST — Fade These</div>
+  <div class="signal-card divest">
+    <div class="signal-header"><div class="signal-name">Traditional SaaS Without AI Differentiation</div><span class="signal-badge badge-divest">DIVEST</span></div>
+    <div class="signal-desc">Blackbird VC warned of "SaaSpocalypse" wiping nearly $1 trillion from global software stocks. European unicorns: 60 of 199 have fallen below $1B valuations. Atlassian cutting 1,600 jobs amid AI push. AI-native alternatives are commoditizing the SaaS layer.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 80/100 bearish</div><div class="bar-track"><div class="bar-fill" style="width:80%;background:#f85149"></div></div></div>
+    <div class="signal-source">Sources: This Week in AU Startups Mar 14, VC Corner Mar 11</div>
+  </div>
+  <div class="signal-card divest">
+    <div class="signal-header"><div class="signal-name">Large System Integrators (Standalone)</div><span class="signal-badge badge-divest">DIVEST</span></div>
+    <div class="signal-desc">a16z names Accenture-style SI engagements as being displaced by AI implementation agents. "A single slipped month can cost millions" — and AI startups are now compressing SAP migrations from 3 years to months. The $380B SI TAM is the disruption target.</div>
+    <div class="conviction-bar"><div class="conviction-label">Conviction: 75/100 bearish</div><div class="bar-track"><div class="bar-fill" style="width:75%;background:#f85149"></div></div></div>
+    <div class="signal-source">Sources: a16z Mar 16</div>
+  </div>
+</div>
+
+<!-- PREDICTIONS -->
+<div class="content" id="tab-predictions">
+  <div class="section-title">Near-Term Predictions (1–4 Weeks)</div>
+  <div class="pred-card">
+    <div class="pred-horizon">📅 Near-term · 1–2 weeks</div>
+    <div class="pred-title">Nvidia GTC Announcements Will Trigger Enterprise AI Procurement Surge</div>
+    <div class="pred-body">Jensen Huang's keynote at SAP Center (today, March 16) with NemoClaw reveal. 39,000 attendees from 190 countries. Enterprise buyers will leave with clear AI infrastructure roadmaps and begin Q2 procurement cycles. Cisco, Google, and Strike already pre-briefed.</div>
+    <div class="confidence-row"><div class="confidence-pct">82%</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:82%;background:#3fb950"></div></div></div></div>
+  </div>
+  <div class="pred-card">
+    <div class="pred-horizon">📅 Near-term · 2–4 weeks</div>
+    <div class="pred-title">Open-Source Video Models Will Disrupt Creative Tools Pricing</div>
+    <div class="pred-body">LTX 2.3 (22B params, 4K/50FPS with audio) and Helios (Apache 2.0) are now genuine Runway/Adobe alternatives. Indie creators and startup marketing teams will adopt rapidly. Runway and Pika will face immediate pricing pressure.</div>
+    <div class="confidence-row"><div class="confidence-pct">75%</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:75%;background:#3fb950"></div></div></div></div>
+  </div>
+
+  <div class="section-title">Medium-Term Predictions (1–3 Months)</div>
+  <div class="pred-card">
+    <div class="pred-horizon">📅 Medium-term · 4–8 weeks</div>
+    <div class="pred-title">YC W26 Demo Day Will Confirm AI Services as the Dominant Batch Theme</div>
+    <div class="pred-body">VC Corner's YC W26 database (196 companies) shows AI-native services dominating. Sequoia's $1T services thesis will be validated by multiple YC companies pitching in accounting, legal, claims, and procurement verticals. Expect 5–8 companies to raise $10M+ immediately post-Demo Day.</div>
+    <div class="confidence-row"><div class="confidence-pct">80%</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:80%;background:#3fb950"></div></div></div></div>
+  </div>
+  <div class="pred-card">
+    <div class="pred-horizon">📅 Medium-term · 6–12 weeks</div>
+    <div class="pred-title">AI Layer Over ERP Market Will See 10+ Funding Announcements</div>
+    <div class="pred-body">a16z's thesis piece signals active investing. Axiamatic, Conduct, Auctor, Supersonik, and Tessera are the named cohort — expect Series A/B announcements. The window is 18–24 months before SAP/ServiceNow respond with acquisitions.</div>
+    <div class="confidence-row"><div class="confidence-pct">73%</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:73%;background:#d29922"></div></div></div></div>
+  </div>
+
+  <div class="section-title">Long-Term Predictions (3–12 Months)</div>
+  <div class="pred-card">
+    <div class="pred-horizon">📅 Long-term · 3–6 months</div>
+    <div class="pred-title">Traditional SaaS Valuations Decline Materially vs AI-Native Alternatives</div>
+    <div class="pred-body">The SaaSpocalypse narrative will compound. By Q3 2026, expect the gap between AI-differentiated SaaS (premium multiples) and legacy SaaS (compressed multiples) to widen in both public and private markets. Atlassian's 1,600-job cut is the leading indicator.</div>
+    <div class="confidence-row"><div class="confidence-pct">78%</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:78%;background:#3fb950"></div></div></div></div>
+  </div>
+  <div class="pred-card">
+    <div class="pred-horizon">📅 Long-term · 6–12 months</div>
+    <div class="pred-title">Geopolitical AI Tools for Supply Chain Emerge as New VC Category</div>
+    <div class="pred-body">a16z "Monitoring the Situation in Hormuz" + Polymarket 39% chance of normal traffic by April. Supply chain AI tools monitoring geopolitical risk will accelerate. Expect 2–3 companies in this space to announce meaningful rounds by Q4 2026.</div>
+    <div class="confidence-row"><div class="confidence-pct">55%</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:55%;background:#d29922"></div></div></div></div>
+  </div>
+</div>
+
+<!-- TRENDS -->
+<div class="content" id="tab-trends">
+  <div class="chart-container"><div class="chart-title">Signal Strength by Category This Week</div><canvas id="signalStrength" height="200"></canvas></div>
+  <div class="section-title">📌 Week in Review Timeline — Mar 9–16</div>
+  <div class="timeline-item"><div class="timeline-date">MON Mar 9</div><div class="timeline-title">a16z Build job board: ElevenLabs, Fei-Fei Li, prev CEO of Resy all hiring</div><div class="timeline-body">High-signal hiring week opened early. SpruceID Chief of Staff role published by Next Play. Lenny's "How I AI" pod drops new episode on brand imagery with Midjourney.</div></div>
+  <div class="timeline-item"><div class="timeline-date">TUE Mar 10</div><div class="timeline-title">AI Collective: "Roadmap for AI Economic Transformation" + Tech Brew: "AI coding hits a speed bump"</div><div class="timeline-body">Productive tension: macro AI transformation optimism vs. short-term coding tool reliability concerns. a16z publishes "Institutional AI vs Individual AI" — 6× productivity gap at enterprise, 17× on coding tasks.</div></div>
+  <div class="timeline-item"><div class="timeline-date">WED Mar 11</div><div class="timeline-title">Out-of-Pocket: Open Source Healthcare Categories + Nikhil's Claude builds published</div><div class="timeline-body">Nikhil Krishnan maps open-source healthcare AI whitespace. Family Office Jobs Weekly drops 12 roles. Tech Brew covers AI coding quality concerns. VC Corner publishes SaaS Financial Model guide.</div></div>
+  <div class="timeline-item"><div class="timeline-date">THU Mar 12</div><div class="timeline-title">Next Play: "Should you join Serval" — AI employee support raises A+B in 2 months</div><div class="timeline-body">Serval signals hot category: AI platforms for employee support/HR. GitHub token created for Holly's newsletter dashboard. Morning Brew covers AI-generated actor "Tilly Norwood."</div></div>
+  <div class="timeline-item"><div class="timeline-date">FRI Mar 13</div><div class="timeline-title">AI Collective: "Pilots Everywhere, Transformation Nowhere" + a16z: Charts of the Week (Hormuz)</div><div class="timeline-body">Sobering enterprise AI reality check. Tech Brew: robotaxis going global. John Gannon: Datacenter × Energy deep-dive. Sam Lessin: "AI is a commodity without monopoly power." Ali Rohde: Reflection AI, Decagon, Harmonic, Robinhood roles.</div></div>
+  <div class="timeline-item"><div class="timeline-date">SAT Mar 14</div><div class="timeline-title">Morning Brew "Your Brain on AI" + AU Startups: $43.35M raised, Anthropic opens Sydney</div><div class="timeline-body">Atlassian cuts 1,600 jobs amid AI push. Blackbird warns of SaaSpocalypse. Canva ranked #3 globally in GenAI web usage (behind only ChatGPT and Gemini). KAST raises $80M for stablecoin payments.</div></div>
+  <div class="timeline-item"><div class="timeline-date">SUN Mar 15</div><div class="timeline-title">VC Corner: YC W26 DB + $1T Services + 15 major funding rounds in one newsletter</div><div class="timeline-body">Biggest single newsletter of the week. Replit $400M/$9B. Advanced Machine Intelligence $1.03B seed. Coefficient Capital $530M new fund. New funds from Entrepreneurs First ($200M), StageOne ($165M), Scout ($125M).</div></div>
+  <div class="timeline-item today"><div class="timeline-date today">MON Mar 16 — TODAY</div><div class="timeline-title">AI Collective: AI Model Avalanche (12+ models) + Nvidia NemoClaw + Jensen Huang GTC keynote</div><div class="timeline-body">a16z publishes SAP/Enterprise AI thesis — landmark piece. OpenAI GPT-5.4 (1M context window, 83% GDPval). Alibaba Qwen 3.5 runs on iPhone. Helios open-source video generation (Apache 2.0). Axios Pro Rata: Affinity marketing + Glencore M&A activity.</div></div>
+</div>
+
+<!-- HIRING -->
+<div class="content" id="tab-hiring">
+  <div class="grid-4">
+    <div class="card"><div class="card-title">VC / Platform Roles</div><div class="card-value" style="color:#3fb950">40+</div></div>
+    <div class="card"><div class="card-title">Startup Roles</div><div class="card-value" style="color:#58a6ff">45+</div></div>
+    <div class="card"><div class="card-title">Family Office Roles</div><div class="card-value" style="color:#a371f7">12</div></div>
+    <div class="card"><div class="card-title">Avg PM/Ops Salary</div><div class="card-value" style="color:#d29922">$165K</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-container"><div class="chart-title">Hiring by Industry</div><canvas id="hiringIndustry" height="220"></canvas></div>
+    <div class="chart-container"><div class="chart-title">Role Categories This Week</div><canvas id="roleCategories" height="220"></canvas></div>
+  </div>
+  <div class="section-title">🔥 Companies Hiring Aggressively This Week</div>
+  <table style="margin-bottom:24px">
+    <thead><tr><th>Company</th><th>Stage</th><th>Roles Open</th><th>Salary Range</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ElevenLabs</strong></td><td><span class="pill pill-blue">Growth</span></td><td>Multiple: Eng, GTM</td><td>$180–$280K</td><td>a16z Build</td></tr>
+      <tr><td><strong>Decagon</strong></td><td><span class="pill pill-green">Series B</span></td><td>Acquihiring aggressively</td><td>$160–$250K</td><td>Next Play</td></tr>
+      <tr><td><strong>Reflection AI</strong></td><td><span class="pill pill-purple">Early-stage</span></td><td>Engineering, Research</td><td>$200–$350K</td><td>Ali Rohde Ed. 249</td></tr>
+      <tr><td><strong>Harmonic</strong></td><td><span class="pill pill-blue">Growth</span></td><td>Data, Engineering</td><td>$150–$220K</td><td>Ali Rohde Ed. 249</td></tr>
+      <tr><td><strong>Robinhood</strong></td><td><span class="pill pill-yellow">Public</span></td><td>PM, Finance, Eng</td><td>$170–$260K</td><td>Ali Rohde Ed. 249</td></tr>
+      <tr><td><strong>Serval</strong></td><td><span class="pill pill-green">Series B</span></td><td>Operations, Product, Sales</td><td>$140–$200K</td><td>Next Play Spotlight</td></tr>
+      <tr><td><strong>SpruceID</strong></td><td><span class="pill pill-blue">Growth</span></td><td>Chief of Staff (NYC)</td><td>$150–$200K</td><td>Next Play</td></tr>
+      <tr><td><strong>World Labs (Fei-Fei Li)</strong></td><td><span class="pill pill-purple">Early-stage</span></td><td>Research, Engineering</td><td>$200–$400K</td><td>a16z Build</td></tr>
+      <tr><td><strong>Replit</strong></td><td><span class="pill pill-blue">Series D</span></td><td>Engineering, PM</td><td>$180–$280K</td><td>VC Corner</td></tr>
+    </tbody>
+  </table>
+  <div class="section-title">💼 VC / Platform Roles This Week</div>
+  <table style="margin-bottom:24px">
+    <thead><tr><th>Firm</th><th>Role</th><th>Location</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td><strong>NextView Ventures</strong></td><td>VC Principal</td><td>New York, NY</td><td>VC Corner</td></tr>
+      <tr><td><strong>General Atlantic</strong></td><td>VC Analyst</td><td>New York, NY</td><td>VC Corner</td></tr>
+      <tr><td><strong>ABS Capital</strong></td><td>Senior VC Associate</td><td>Washington, DC</td><td>VC Corner</td></tr>
+      <tr><td><strong>Yamaha Motor Ventures</strong></td><td>Senior VC Associate</td><td>Palo Alto, CA</td><td>VC Corner</td></tr>
+      <tr><td><strong>Defy VC</strong></td><td>VC Analyst</td><td>Remote</td><td>VC Corner</td></tr>
+      <tr><td><strong>Techstars</strong></td><td>VC Manager</td><td>London, UK</td><td>VC Corner</td></tr>
+      <tr><td><strong>Northzone</strong></td><td>VC Associate</td><td>London, UK</td><td>VC Corner</td></tr>
+      <tr><td><strong>Various Family Offices</strong></td><td>Multiple roles</td><td>Various</td><td>Family Office Jobs Weekly</td></tr>
+    </tbody>
+  </table>
+  <div class="section-title">🏢 Built In — Top PM / Director Matches</div>
+  <table>
+    <thead><tr><th>Company</th><th>Role</th><th>Location</th><th>Salary</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Thrive Market</strong></td><td>Senior Product Manager, Logistics</td><td>Remote</td><td>$150,000+</td></tr>
+      <tr><td><strong>Accor</strong></td><td>Director of Operations</td><td>New York, NY</td><td>$130,000–$175,000</td></tr>
+      <tr><td><strong>GreatAmerica Financial</strong></td><td>Director of Operations</td><td>Multiple</td><td>$131,200–$155,800</td></tr>
+      <tr><td><strong>Aesthetix CRM</strong></td><td>Director of Technical Operations</td><td>Remote</td><td>Competitive</td></tr>
+      <tr><td><strong>Marriott International</strong></td><td>Director of Room Operations</td><td>Multiple</td><td>Competitive</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- WHITESPACE -->
+<div class="content" id="tab-whitespace">
+  <div class="section-title">🕳️ Tier 1 — Clearest Whitespace Opportunities</div>
+  <div class="ws-card">
+    <div class="ws-tier t1">TIER 1 · HIGH CONVICTION</div>
+    <div class="ws-title">AI Implementation Agents for Enterprise ERP (SAP / ServiceNow / Salesforce)</div>
+    <div class="ws-desc">a16z explicitly named this category as under-served. "Computer-use" agents handle the last 30–40% of workflows where APIs don't exist. AI can compress $700M / 3-year SAP migrations. The $380B SI market is the TAM. Current named players (Axiamatic, Conduct, Auctor, Tessera) are early — none dominant.</div>
+    <div class="ws-ideal"><div class="ws-ideal-label">Ideal company profile:</div>Pre-Series A with 2–3 enterprise logos. Has both API-based and computer-use capabilities. Sells into transformation budgets ($10–50M deals). Deep partnership with 1 major SI (EY, Deloitte, KPMG) who sees them as a multiplier, not a threat.</div>
+  </div>
+  <div class="ws-card">
+    <div class="ws-tier t1">TIER 1 · HIGH CONVICTION</div>
+    <div class="ws-title">AI Services Delivery at Outcome-Based Pricing (Accounting, Claims, Procurement)</div>
+    <div class="ws-desc">Sequoia's Julien Bek: AI companies shifting from selling tools to delivering finished work. Every dollar of software supports $5–10 of human labor in services. Legora ($5.55B) validates legal; accounting, insurance claims, and procurement are significantly less crowded. The "AI autopilot" pricing model (per outcome, not per seat) is the unlock.</div>
+    <div class="ws-ideal"><div class="ws-ideal-label">Ideal company profile:</div>Vertical-specific AI services company with outcome-based pricing. Fewer than 5 FTEs per $1M ARR. Positioned as "we replace a BPO contract" rather than "we sell software." Start with one vertical, then expand via workflow adjacency.</div>
+  </div>
+  <div class="ws-card">
+    <div class="ws-tier t1">TIER 1 · HIGH CONVICTION</div>
+    <div class="ws-title">Open-Source Healthcare AI Platform</div>
+    <div class="ws-desc">Out-of-Pocket mapped specific open-source healthcare categories with limited current player density. Heidi Health + R1 partnership signals clinical documentation is coalescing. Gap: platforms that sit between EMR/EHR systems and the AI layer — like what's happening in ERP but for healthcare. Open-source licensing (Apache 2.0) lowers adoption friction with health systems.</div>
+    <div class="ws-ideal"><div class="ws-ideal-label">Ideal company profile:</div>Clinical workflow AI on open-source foundations. Sells to physician groups or health systems. Has Epic/Athena integrations. Founder should be a physician-entrepreneur or have deep clinical ops background.</div>
+  </div>
+
+  <div class="section-title">🕳️ Tier 2 — Emerging Opportunities</div>
+  <div class="ws-card">
+    <div class="ws-tier t2">TIER 2 · EMERGING</div>
+    <div class="ws-title">Sovereign AI Infrastructure for Non-US Markets</div>
+    <div class="ws-desc">Anthropic opened Sydney office. SCX.ai launched Australia's first sovereign AI infrastructure node. Cortical Labs building brain-cell data centres. Narrative of "sovereign AI" (data sovereignty + local compute) is accelerating outside the US in AU, EU, and MENA. No clear global platform player yet.</div>
+    <div class="ws-ideal"><div class="ws-ideal-label">Ideal company profile:</div>Infrastructure company enabling enterprises in regulated international markets to run AI workloads on compliant local compute. Compliance-first positioning. Could be a managed service layer over regional cloud providers.</div>
+  </div>
+  <div class="ws-card">
+    <div class="ws-tier t2">TIER 2 · EMERGING</div>
+    <div class="ws-title">AI for Family Office Operations</div>
+    <div class="ws-desc">Family Office Jobs Weekly is an active standalone newsletter — signals a large, engaged community. Family offices manage $6T+ globally using extremely manual processes. No dominant AI tool exists for family office reporting, deal tracking, or LP communications. High willingness to pay.</div>
+    <div class="ws-ideal"><div class="ws-ideal-label">Ideal company profile:</div>Purpose-built SaaS for single-family and multi-family offices: automated reporting, tax optimization, private investment tracking. Pricing: $5,000–$20,000/month. Distribution through family office associations and existing wealth management networks.</div>
+  </div>
+  <div class="ws-card">
+    <div class="ws-tier t2">TIER 2 · EMERGING</div>
+    <div class="ws-title">Chief of Staff / Executive Operating System</div>
+    <div class="ws-desc">Clara Ma's "Ask a Chief of Staff" community highlighted SkipUp (AI-powered scheduling founders used without noticing). VC Corner highlighted Claude Code replacing a virtual assistant. Multiple CoS roles open this week. Whitespace: a proper CoS workflow OS — not just scheduling but strategic execution tracking.</div>
+    <div class="ws-ideal"><div class="ws-ideal-label">Ideal company profile:</div>AI-first executive operating system: inbox triage, stakeholder tracking, meeting prep, and decision memos. Initial market: Chiefs of Staff at Series B+ startups. Upsell to COO-level. Distribution through the tight-knit CoS community.</div>
+  </div>
+</div>
+
+<!-- VELOCITY -->
+<div class="content" id="tab-velocity">
+  <div class="chart-container"><div class="chart-title">Narrative Coverage Count — Week of Mar 9–16</div><canvas id="velocityChart" height="200"></canvas></div>
+  <div class="section-title">⚡ Per-Topic Velocity</div>
+  <div class="velocity-card">
+    <div class="velocity-name">🚀 Agentic AI Infrastructure — FASTEST MOVING</div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:8px">Nvidia NemoClaw, OpenClaw ecosystem, Claude Code $2.5B ARR. Multiple newsletters led with this. Coverage tripled week-over-week.</div>
+    <div class="velocity-bar-row"><div class="velocity-number">+320% MoM</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:95%;background:#3fb950"></div></div></div></div>
+  </div>
+  <div class="velocity-card">
+    <div class="velocity-name">🚀 AI Model Releases — AVALANCHE WEEK</div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:8px">12+ models in 7 days (GPT-5.4, LTX 2.3, Qwen 3.5, Helios). AI Collective called this historically unprecedented density.</div>
+    <div class="velocity-bar-row"><div class="velocity-number">+280% WoW</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:90%;background:#3fb950"></div></div></div></div>
+  </div>
+  <div class="velocity-card">
+    <div class="velocity-name">📈 Enterprise ERP Modernization — NEW THESIS ENTERING MAINSTREAM</div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:8px">a16z published the SAP thesis; VC Corner cited Sequoia's $1T services piece. Barely covered last month; now has two major newsletter anchors.</div>
+    <div class="velocity-bar-row"><div class="velocity-number">+180% MoM</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:78%;background:#58a6ff"></div></div></div></div>
+  </div>
+  <div class="velocity-card">
+    <div class="velocity-name">📈 AI Coding / Vibe Coding — STEADY ACCELERATION</div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:8px">Replit $9B, Tech Brew coverage, Aakash Gupta's image gen guide, Lenny's "How I AI" podcast. Consistent cross-newsletter presence.</div>
+    <div class="velocity-bar-row"><div class="velocity-number">+120% MoM</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:65%;background:#58a6ff"></div></div></div></div>
+  </div>
+  <div class="velocity-card">
+    <div class="velocity-name">📊 AI Productivity Gap — NEW NARRATIVE THIS WEEK</div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:8px">a16z "Institutional AI vs Individual AI," OpenAI 6× gap data, Morning Brew "AI Brain Fry." New narrative crystallizing around the power-user / median split.</div>
+    <div class="velocity-bar-row"><div class="velocity-number">NEW ✨</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:55%;background:#d29922"></div></div></div></div>
+  </div>
+  <div class="velocity-card">
+    <div class="velocity-name">📉 Traditional SaaS Concern — LOUDER ALARMS</div>
+    <div style="font-size:12px;color:#8b949e;margin-bottom:8px">Blackbird's SaaSpocalypse, EU unicorn mark-downs. Coverage concentrated in investor newsletters; alarm is louder but audience is narrower.</div>
+    <div class="velocity-bar-row"><div class="velocity-number">+40% WoW</div><div style="flex:1"><div class="bar-track"><div class="bar-fill" style="width:35%;background:#f85149"></div></div></div></div>
+  </div>
+</div>
+
+<!-- SENTIMENT -->
+<div class="content" id="tab-sentiment">
+  <div class="chart-container"><div class="chart-title">Sector Sentiment Scores — March 16, 2026</div><canvas id="sentimentChart" height="220"></canvas></div>
+  <div class="grid-3">
+    <div>
+      <div class="section-title">📈 Most Improved</div>
+      <div class="signal-card" style="border-left-color:#3fb950">
+        <div class="signal-name" style="color:#3fb950;margin-bottom:6px">Agentic AI Infrastructure</div>
+        <div class="signal-desc">NemoClaw + Claude Code revenue data pushed sentiment to 95/100. Estimated baseline was ~70. +25 points this week.</div>
+      </div>
+      <div class="signal-card" style="border-left-color:#3fb950;margin-top:8px">
+        <div class="signal-name" style="color:#3fb950;margin-bottom:6px">Enterprise ERP Modernization</div>
+        <div class="signal-desc">New category this week. a16z thesis moved this from ~35 (niche) to 85 (mainstream investment thesis). +50 points.</div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">📉 Most Deteriorated</div>
+      <div class="signal-card" style="border-left-color:#f85149">
+        <div class="signal-name" style="color:#f85149;margin-bottom:6px">Traditional SaaS</div>
+        <div class="signal-desc">SaaSpocalypse + Atlassian -1,600 jobs + EU unicorn devaluations. Moved ~55 → 35 (-20 points).</div>
+      </div>
+      <div class="signal-card" style="border-left-color:#f85149;margin-top:8px">
+        <div class="signal-name" style="color:#f85149;margin-bottom:6px">Legacy System Integrators</div>
+        <div class="signal-desc">a16z explicitly calls them out as being displaced. Moved from neutral to clearly bearish. -15 points.</div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">🔄 Notable Reversals</div>
+      <div class="signal-card" style="border-left-color:#d29922">
+        <div class="signal-name" style="color:#d29922;margin-bottom:6px">Consumer DTC</div>
+        <div class="signal-desc">Quince $500M + Coefficient Capital $530M fund flipped this from DIVEST-trending back to WATCH territory.</div>
+      </div>
+      <div class="signal-card" style="border-left-color:#d29922;margin-top:8px">
+        <div class="signal-name" style="color:#d29922;margin-bottom:6px">On-Device AI</div>
+        <div class="signal-desc">Qwen 3.5 on iPhone 4GB RAM flipped this from "future trend" to "happening now." Accelerating faster than expected.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KEY PEOPLE -->
+<div class="content" id="tab-people">
+  <div class="chart-container"><div class="chart-title">People Mention Frequency This Week</div><canvas id="peopleChart" height="180"></canvas></div>
+  <div class="section-title">👤 Why They Matter</div>
+  <div class="person-card">
+    <div class="person-name">Jensen Huang</div>
+    <div class="person-role">CEO, Nvidia — GTC 2026 Keynote (March 16)</div>
+    <div class="person-why">Delivered the most anticipated tech keynote of Q1 2026 at SAP Center in San Jose. Announced NemoClaw (Nvidia's open-source agent platform), pitched enterprise partners Cisco, Google, and Strike. GTC drew 39,000 attendees from 190 countries. His repositioning of Nvidia as an AI platform company (not just a chip company) is the week's biggest strategic move.</div>
+  </div>
+  <div class="person-card">
+    <div class="person-name">Julien Bek</div>
+    <div class="person-role">Partner, Sequoia Capital</div>
+    <div class="person-why">Published the "$1T AI Services Opportunity" thesis cited by VC Corner and multiple newsletters. The framing — AI companies should deliver finished work rather than sell tools, targeting the human labor behind every dollar of software — is the week's most cited VC thesis. Will shape how YC W26 Demo Day is evaluated.</div>
+  </div>
+  <div class="person-card">
+    <div class="person-name">Alfred Lin</div>
+    <div class="person-role">Partner, Sequoia Capital</div>
+    <div class="person-why">Cited for "developers are becoming commanders of AI coding fleets." The framing of taste/direction/vision over raw coding speed is reshaping how PM and product roles are being evaluated. VC Corner featured his observation prominently in the Replit deep-dive context.</div>
+  </div>
+  <div class="person-card">
+    <div class="person-name">Nikhil Krishnan</div>
+    <div class="person-role">Founder, Out-of-Pocket Health</div>
+    <div class="person-why">Published "Open Source Healthcare Categories I Like" — a whitespace map likely to generate multiple deal flows. Also building with Claude (published Claude Cowork setup guide). Well-connected bridge between health, VC, and AI communities. Two newsletters this week.</div>
+  </div>
+  <div class="person-card">
+    <div class="person-name">Fei-Fei Li</div>
+    <div class="person-role">Co-founder, World Labs</div>
+    <div class="person-why">World Labs actively hiring senior engineers and researchers (via a16z Build). World Labs is one of the most anticipated spatial intelligence startups. Appearing in a hiring newsletter signals an active team build-out — likely a pre-product launch window of 3–6 months.</div>
+  </div>
+  <div class="person-card">
+    <div class="person-name">Sam Lessin</div>
+    <div class="person-role">Investor / Essayist, SWL Newsletter</div>
+    <div class="person-why">Published "A Commodity Without Monopoly Power" — contrarian take that AI capabilities are commoditizing faster than expected, erasing moats for most AI companies. Important counter-narrative to the infrastructure investment thesis. Worth tracking as a bellwether for the "AI plateau" narrative.</div>
+  </div>
+  <div class="section-title">🔭 Who to Watch Next</div>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><div style="font-weight:600;margin-bottom:4px">Peter Steinberger</div><div style="font-size:12px;color:#8b949e">OpenClaw creator now inside OpenAI, leading personal agent development. NemoClaw is directly competing with his work. The dynamic between OpenAI and Nvidia in agent platforms will be shaped by him.</div></div>
+      <div><div style="font-weight:600;margin-bottom:4px">Boris Cherny</div><div style="font-size:12px;color:#8b949e">Meta AI PM covered by Aakash Gupta — "prototypes hundreds of versions before shipping." His framework for "taste at speed" will influence AI PM hiring criteria for the next 12 months.</div></div>
+      <div style="margin-top:8px"><div style="font-weight:600;margin-bottom:4px">Jacob Warwick</div><div style="font-size:12px;color:#8b949e">Executive negotiator profiled in Lenny's Newsletter. 20–40% comp unlocks through pre-offer framing. Worth following for salary intelligence and negotiation tactics in the AI labor market.</div></div>
+      <div style="margin-top:8px"><div style="font-weight:600;margin-bottom:4px">Maxine Minter / Alexey Mitko</div><div style="font-size:12px;color:#8b949e">Co-founders of Co Ventures (AU), raised $15M Fund II backed by Brad Feld and Blackbird. Pre-seed AU market — watch for cross-Pacific deal flow, especially in AI and deep tech.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPETITIVE MAP -->
+<div class="content" id="tab-competitive">
+  <div class="section-title">🗺️ Battleground Analysis by Sector</div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:12px;color:#58a6ff">⚔️ AI Agent Platforms — Most Contested Battleground This Week</div>
+    <table>
+      <thead><tr><th>Player</th><th>Backing</th><th>Approach</th><th>Edge / Risk</th></tr></thead>
+      <tbody>
+        <tr><td><strong>NemoClaw</strong></td><td>Nvidia (announced today)</td><td>Open-source, hardware-native agent platform</td><td>GPU ecosystem lock-in; early access with Cisco, Google, Strike</td></tr>
+        <tr><td><strong>OpenClaw</strong></td><td>OpenAI (foundation)</td><td>"Always-on" personal agents from own devices</td><td>Creator (Peter Steinberger) now inside OpenAI</td></tr>
+        <tr><td><strong>LangChain</strong></td><td>VC-backed</td><td>Open framework, developer-first</td><td>Largest developer adoption; risk of commoditization</td></tr>
+        <tr><td><strong>CrewAI</strong></td><td>VC-backed</td><td>Multi-agent orchestration</td><td>Enterprise integrations; risk of being subsumed</td></tr>
+        <tr><td><strong>Claude Code / Cowork</strong></td><td>Anthropic</td><td>Scheduled tasks + desktop automation for non-devs</td><td>Consumer-grade UX; differentiated audience</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:12px;color:#3fb950">🌱 Pre-Competitive Spaces (Low Current Player Density)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:#21262d;border-radius:6px;padding:12px"><div style="font-weight:600;margin-bottom:6px">AI Implementation Agents for ERP</div><div style="font-size:12px;color:#8b949e">5 named players, none dominant. $380B TAM. Window: 18–24 months before SAP/ServiceNow buy in.</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:12px"><div style="font-weight:600;margin-bottom:6px">On-Device AI App Layer (iPhone)</div><div style="font-size:12px;color:#8b949e">Qwen 3.5 on 4GB iPhone opens new platform layer. No dominant framework for on-device AI apps yet.</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:12px"><div style="font-weight:600;margin-bottom:6px">Sovereign AI Infrastructure</div><div style="font-size:12px;color:#8b949e">AU, EU, MENA demanding local compute. Anthropic opening Sydney signals demand. No global platform player.</div></div>
+      <div style="background:#21262d;border-radius:6px;padding:12px"><div style="font-weight:600;margin-bottom:6px">AI for Family Offices ($6T AUM)</div><div style="font-size:12px;color:#8b949e">Extremely manual operations. High willingness to pay. No dominant AI tool. Active hiring community signal.</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;font-size:15px;margin-bottom:12px;color:#f85149">🔴 Sectors Under Pressure</div>
+    <div class="source-row"><div><div class="source-name">Traditional SaaS (no AI differentiation)</div><div class="source-freq">Blackbird "SaaSpocalypse," European unicorn mark-downs, Atlassian -1,600 jobs</div></div><span class="pill pill-red">High Risk</span></div>
+    <div class="source-row"><div><div class="source-name">Large System Integrators (standalone)</div><div class="source-freq">a16z names them as being replaced by AI agents. Customers will pay for outcome, not headcount.</div></div><span class="pill pill-red">High Risk</span></div>
+    <div class="source-row"><div><div class="source-name">Generic AI Assistants (no vertical focus)</div><div class="source-freq">Sam Lessin: AI is a commodity. Horizontal assistants are becoming table stakes, not moats.</div></div><span class="pill pill-orange">Medium Risk</span></div>
+  </div>
+</div>
+
+<!-- FUNDING -->
+<div class="content" id="tab-funding">
+  <div class="chart-container"><div class="chart-title">Capital Concentration by Category (This Week)</div><canvas id="fundingDonut" height="220"></canvas></div>
+  <div class="section-title">💰 Disclosed Rounds — Mar 9–16, 2026</div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="funding-card"><div><div class="funding-company">Advanced Machine Intelligence</div><div class="funding-meta">Next-gen AI systems & infrastructure</div></div><div style="text-align:right"><div class="funding-amount">$1.03B</div><div class="funding-round">Seed</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Legora</div><div class="funding-meta">AI-powered legal technology platform</div></div><div style="text-align:right"><div class="funding-amount">$550M</div><div class="funding-round">Series D · $5.55B valuation</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Mind Robotics</div><div class="funding-meta">Advanced robotics systems</div></div><div style="text-align:right"><div class="funding-amount">$500M</div><div class="funding-round">Series A</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">NextHop AI</div><div class="funding-meta">AI networking infrastructure</div></div><div style="text-align:right"><div class="funding-amount">$500M</div><div class="funding-round">Series B</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Quince</div><div class="funding-meta">Direct-to-consumer retail platform</div></div><div style="text-align:right"><div class="funding-amount">$500M</div><div class="funding-round">Series E</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Replit</div><div class="funding-meta">Collaborative AI coding platform</div></div><div style="text-align:right"><div class="funding-amount">$400M</div><div class="funding-round">Series D · $9B valuation</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Eridu</div><div class="funding-meta">AI infrastructure platform</div></div><div style="text-align:right"><div class="funding-amount">$200M+</div><div class="funding-round">Undisclosed</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Wonderful</div><div class="funding-meta">Technology platform</div></div><div style="text-align:right"><div class="funding-amount">$150M</div><div class="funding-round">Series B</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Oro Labs</div><div class="funding-meta">Procurement orchestration</div></div><div style="text-align:right"><div class="funding-amount">$100M</div><div class="funding-round">Series C</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">KAST (Australia)</div><div class="funding-meta">Stablecoin payments infrastructure</div></div><div style="text-align:right"><div class="funding-amount">$80M</div><div class="funding-round">Growth · QED + Left Lane</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Gumloop</div><div class="funding-meta">AI workflow automation</div></div><div style="text-align:right"><div class="funding-amount">$50M</div><div class="funding-round">Series B</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Qdrant</div><div class="funding-meta">Open-source vector database</div></div><div style="text-align:right"><div class="funding-amount">$50M</div><div class="funding-round">Series B</div></div></div>
+  </div>
+  <div class="section-title">🆕 New Funds Launched This Week</div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="funding-card"><div><div class="funding-company">Coefficient Capital</div><div class="funding-meta">High-growth consumer brands & platforms</div></div><div style="text-align:right"><div class="funding-amount">$530M</div><div class="funding-round">New fund</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Entrepreneurs First</div><div class="funding-meta">Pre-idea founders globally</div></div><div style="text-align:right"><div class="funding-amount">$200M</div><div class="funding-round">New fund</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">StageOne Ventures</div><div class="funding-meta">Early-stage enterprise tech & AI</div></div><div style="text-align:right"><div class="funding-amount">$165M</div><div class="funding-round">Fund V</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Scout Ventures</div><div class="funding-meta">Dual-use AI / cyber / space</div></div><div style="text-align:right"><div class="funding-amount">$125M</div><div class="funding-round">Fund V</div></div></div>
+    <div class="funding-card"><div><div class="funding-company">Breakout Ventures</div><div class="funding-meta">Early-stage deep tech</div></div><div style="text-align:right"><div class="funding-amount">$114M</div><div class="funding-round">Fund III</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">📰 Recommended Newsletters to Add</div>
+    <div class="source-row"><div><div class="source-name">SemiAnalysis</div><div class="source-freq">GPU/chip infrastructure — essential for the Nvidia/agent thesis</div></div><span class="pill pill-green">Strongly Consider</span></div>
+    <div class="source-row"><div><div class="source-name">The Information</div><div class="source-freq">Deep-dive enterprise AI reporting — complements a16z analysis</div></div><span class="pill pill-orange">Consider</span></div>
+    <div class="source-row"><div><div class="source-name">Newcomer (Eric Newcomer)</div><div class="source-freq">VC/startup reporting — good Axios Pro Rata complement</div></div><span class="pill pill-orange">Consider</span></div>
+    <div class="source-row"><div><div class="source-name">Healthcare IT News</div><div class="source-freq">Fills gap in healthcare AI beyond Out-of-Pocket</div></div><span class="pill pill-yellow">Nice to Have</span></div>
+  </div>
+</div>
+
+<!-- WHAT CHANGED -->
+<div class="content" id="tab-changed">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;margin-bottom:24px">
+    <div style="font-size:14px;font-weight:600;color:#8b949e;margin-bottom:6px">📋 Baseline Run — March 16, 2026</div>
+    <div style="font-size:13px;color:#8b949e">This is the first run of the Newsletter Intelligence Dashboard. No prior week snapshot exists for comparison. Baseline established today — check back next Monday (March 23) for your first full week-over-week comparison with all categories tracked.</div>
+  </div>
+  <div class="change-section new">
+    <h3>🆕 NEW THIS WEEK — Entering the Feed for the First Time</h3>
+    <div class="change-item">📌 <strong>NemoClaw (Nvidia)</strong> — Nvidia's open-source agent platform entering the market, announced at GTC 2026. Directly competing with OpenClaw/LangChain ecosystem.</div>
+    <div class="change-item">📌 <strong>AI Model Avalanche (12+ in one week)</strong> — GPT-5.4, LTX 2.3, Qwen 3.5, Helios. AI Collective described this as historically unprecedented density for a single week.</div>
+    <div class="change-item">📌 <strong>Enterprise ERP Modernization as VC Category</strong> — a16z published a landmark thesis defining AI over SAP/ServiceNow as a standalone investment category. Named companies: Axiamatic, Conduct, Auctor, Supersonik, Tessera.</div>
+    <div class="change-item">📌 <strong>$1T AI Services Opportunity (Sequoia/Julien Bek)</strong> — New conceptual anchor for evaluating AI companies: shift from selling tools to delivering finished work. Multiple newsletters cited this framing.</div>
+    <div class="change-item">📌 <strong>Anthropic Sydney Office</strong> — First major AI lab with dedicated ANZ presence. Signals geographic expansion beyond US/EU.</div>
+    <div class="change-item">📌 <strong>Qwen 3.5 on iPhone (4GB RAM)</strong> — Frontier-quality model running on-device today. New platform opportunity for mobile-native AI apps.</div>
+    <div class="change-item">📌 <strong>Legora ($5.55B)</strong> — New marquee valuation in AI legal tech. Validates the legal services AI category at meaningful scale.</div>
+  </div>
+  <div class="change-section up">
+    <h3>📈 MOVED UP — Signals Accelerating</h3>
+    <div class="change-item">🔺 <strong>Agentic AI Infrastructure</strong> — Sentiment moved to 95/100 (est. baseline ~70). NemoClaw + Codex 1.6M WAU + Claude Code $2.5B ARR all landed this week.</div>
+    <div class="change-item">🔺 <strong>AI Coding / Vibe Coding</strong> — Replit $400M/$9B + GitHub Copilot 20M users. Moved from ~70 → 90.</div>
+    <div class="change-item">🔺 <strong>Physical Robotics</strong> — Mind Robotics $500M + Amazon $750M robotics centre + Tech Brew robotaxi global coverage. Moved ~60 → 75.</div>
+    <div class="change-item">🔺 <strong>Stablecoin Payments</strong> — KAST $80M + Pay.com.au ASX float + Macropod. Moved ~45 → 65.</div>
+  </div>
+  <div class="change-section down">
+    <h3>📉 MOVED DOWN — Deteriorating Signals</h3>
+    <div class="change-item">🔻 <strong>Traditional SaaS</strong> — SaaSpocalypse narrative intensified. Atlassian -1,600 jobs. European unicorns shedding value. Moved ~55 → 35 (-20 points).</div>
+    <div class="change-item">🔻 <strong>Legacy System Integrators</strong> — a16z explicitly calls them out as being displaced by AI agents. Moved from neutral to bearish (-15 points).</div>
+    <div class="change-item">🔻 <strong>Generic AI Consumer Apps</strong> — Sam Lessin "commodity without monopoly power" thesis. Moved ~60 → 45.</div>
+  </div>
+  <div class="change-section flip">
+    <h3>🔄 FLIPPED — Category Changed</h3>
+    <div class="change-item">↔️ <strong>Consumer DTC</strong> — Was trending DIVEST. Quince $500M + Coefficient Capital $530M fund flipped this to WATCH.</div>
+    <div class="change-item">↔️ <strong>On-Device AI</strong> — Was a future thesis (WATCH). Qwen 3.5 running on iPhone today flipped this to INVEST for mobile-native app builders.</div>
+  </div>
+  <div class="change-section dropped">
+    <h3>👋 DROPPED OFF — Topics That Faded</h3>
+    <div class="change-item">📭 <strong>Crypto NFTs / Web3 Consumer</strong> — Minimal coverage this week. Only stablecoin payments remains as an active crypto thread.</div>
+    <div class="change-item">📭 <strong>AR/VR/Spatial Computing</strong> — Only mention was Blippar acquiring Plattar (Australia). Not present in US-focused newsletters this week.</div>
+  </div>
+  <div class="change-section whitespace">
+    <h3>💡 NEW WHITESPACE IDENTIFIED THIS WEEK</h3>
+    <div class="change-item">💡 <strong>AI ERP Implementation Agents</strong> — New category defined by a16z. No dominant player. $380B TAM. Window is 18–24 months before incumbents respond.</div>
+    <div class="change-item">💡 <strong>On-Device AI App Layer (iPhone)</strong> — Qwen 3.5 on iPhone opens a new platform. No dominant framework for on-device AI apps has emerged yet.</div>
+    <div class="change-item">💡 <strong>Sovereign AI Infrastructure (ANZ/EU/MENA)</strong> — Anthropic Sydney + SCX.ai node + EU regulatory pressure = new market forming for compliant local AI compute.</div>
+  </div>
+</div>
+
+<!-- SOURCES -->
+<div class="content" id="tab-sources">
+  <div class="chart-container"><div class="chart-title">Coverage Mix by Newsletter Type</div><canvas id="coverageDonut" height="220"></canvas></div>
+  <div class="section-title">📰 Full Newsletter Directory (32 analyzed this week)</div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="source-row"><div><div class="source-name">The AI Collective Newsletter</div><div class="source-freq">3 issues · AI model avalanche, enterprise AI transformation, events</div></div><div class="source-tags"><span class="pill pill-blue">AI</span><span class="pill pill-green">Events</span></div></div>
+    <div class="source-row"><div><div class="source-name">a16z Newsletter</div><div class="source-freq">2 issues · Enterprise AI / SAP thesis, geopolitics (Hormuz), hiring</div></div><div class="source-tags"><span class="pill pill-blue">VC</span><span class="pill pill-purple">Enterprise</span></div></div>
+    <div class="source-row"><div><div class="source-name">a16z Build (Job Board)</div><div class="source-freq">1 issue · ElevenLabs, World Labs, prev CEO of Resy hiring</div></div><div class="source-tags"><span class="pill pill-green">Hiring</span></div></div>
+    <div class="source-row"><div><div class="source-name">The VC Corner</div><div class="source-freq">3 issues · YC W26 batch, Replit deep-dive, SaaS model, 15 funding rounds</div></div><div class="source-tags"><span class="pill pill-blue">VC</span><span class="pill pill-yellow">Funding</span></div></div>
+    <div class="source-row"><div><div class="source-name">Axios Pro Rata (Dan Primack)</div><div class="source-freq">2 issues · PE performance, affinity marketing, Glencore M&A</div></div><div class="source-tags"><span class="pill pill-blue">VC</span><span class="pill pill-purple">Finance</span></div></div>
+    <div class="source-row"><div><div class="source-name">Morning Brew</div><div class="source-freq">5 issues · Daily news, AI brain fry, beauty industry, sports, politics</div></div><div class="source-tags"><span class="pill pill-yellow">General</span></div></div>
+    <div class="source-row"><div><div class="source-name">Tech Brew</div><div class="source-freq">2 issues · Robotaxis, AI coding quality, Alexa+ adults mode</div></div><div class="source-tags"><span class="pill pill-blue">AI</span><span class="pill pill-yellow">Tech</span></div></div>
+    <div class="source-row"><div><div class="source-name">Next Play (ben)</div><div class="source-freq">3 issues · Investor RFS (Spring 2026), Serval spotlight, hiring roundup</div></div><div class="source-tags"><span class="pill pill-green">Hiring</span><span class="pill pill-blue">VC</span></div></div>
+    <div class="source-row"><div><div class="source-name">Lenny's Newsletter / How I AI</div><div class="source-freq">2 issues · Executive negotiation (20–40% comp), AI tool usage</div></div><div class="source-tags"><span class="pill pill-purple">Product</span><span class="pill pill-blue">AI</span></div></div>
+    <div class="source-row"><div><div class="source-name">Ali Rohde Jobs — Edition 249</div><div class="source-freq">1 issue · Reflection AI, Decagon, Harmonic, Robinhood roles</div></div><div class="source-tags"><span class="pill pill-green">Hiring</span></div></div>
+    <div class="source-row"><div><div class="source-name">#SoYouWantToWorkInPlatform — Jobs Drop 140</div><div class="source-freq">1 issue · Non-investing VC roles weekly drop</div></div><div class="source-tags"><span class="pill pill-green">Hiring</span><span class="pill pill-blue">VC</span></div></div>
+    <div class="source-row"><div><div class="source-name">VC Demystified (Nicole DeTommaso)</div><div class="source-freq">1 issue · Finding VC roles before they're publicly posted</div></div><div class="source-tags"><span class="pill pill-blue">VC</span><span class="pill pill-green">Hiring</span></div></div>
+    <div class="source-row"><div><div class="source-name">John Gannon / VC Careers (Venture5 Media)</div><div class="source-freq">3 issues · Datacenter × Energy thesis, Dave Rivinus profile, VC job course</div></div><div class="source-tags"><span class="pill pill-blue">VC</span><span class="pill pill-green">Hiring</span></div></div>
+    <div class="source-row"><div><div class="source-name">Out-of-Pocket Health (Nikhil Krishnan)</div><div class="source-freq">2 issues · Open source healthcare categories, Claude Cowork builds</div></div><div class="source-tags"><span class="pill pill-orange">Healthcare</span><span class="pill pill-blue">AI</span></div></div>
+    <div class="source-row"><div><div class="source-name">This Week in Australian Startups #153</div><div class="source-freq">1 issue · $43M+ raised, Anthropic Sydney, Atlassian layoffs, Canva #3 globally</div></div><div class="source-tags"><span class="pill pill-yellow">Intl</span><span class="pill pill-yellow">Funding</span></div></div>
+    <div class="source-row"><div><div class="source-name">Aakash Gupta / Product Growth + AI by Aakash</div><div class="source-freq">2 issues · Nano Banana 2 (image gen guide), PM "taste at speed"</div></div><div class="source-tags"><span class="pill pill-purple">Product</span><span class="pill pill-blue">AI</span></div></div>
+    <div class="source-row"><div><div class="source-name">Bay Area Founders Club (Dr. Paul Fang)</div><div class="source-freq">1 issue · NVIDIA GTC events, Bay Area meetup roundup</div></div><div class="source-tags"><span class="pill pill-yellow">Events</span><span class="pill pill-blue">VC</span></div></div>
+    <div class="source-row"><div><div class="source-name">Founders Bay (Mariane Bekker)</div><div class="source-freq">2 issues · Founder/VC events (Mar 9–22, Mar 16–29), agentic AI podcast</div></div><div class="source-tags"><span class="pill pill-yellow">Events</span><span class="pill pill-blue">VC</span></div></div>
+    <div class="source-row"><div><div class="source-name">Built In</div><div class="source-freq">Multiple · AI editorial, PM + Director job matches</div></div><div class="source-tags"><span class="pill pill-green">Hiring</span><span class="pill pill-blue">AI</span></div></div>
+    <div class="source-row"><div><div class="source-name">Sam Lessin SWL Week in Review</div><div class="source-freq">1 issue · "AI as a commodity without monopoly power" contrarian thesis</div></div><div class="source-tags"><span class="pill pill-blue">VC</span><span class="pill pill-yellow">Macro</span></div></div>
+    <div class="source-row"><div><div class="source-name">Family Office Jobs Weekly (Mar 11)</div><div class="source-freq">1 issue · 12 curated family office roles</div></div><div class="source-tags"><span class="pill pill-green">Hiring</span><span class="pill pill-purple">Finance</span></div></div>
+    <div class="source-row"><div><div class="source-name">KINN Weekly Newsletter — Edition 134</div><div class="source-freq">1 issue · LA startup community, Startup Cafe event</div></div><div class="source-tags"><span class="pill pill-yellow">Events</span><span class="pill pill-yellow">Community</span></div></div>
+    <div class="source-row"><div><div class="source-name">dot.LA</div><div class="source-freq">1 issue · Tinder's biggest product shift in years</div></div><div class="source-tags"><span class="pill pill-yellow">LA</span><span class="pill pill-yellow">Tech</span></div></div>
+    <div class="source-row"><div><div class="source-name">Conscious Founders (Oliver Evans)</div><div class="source-freq">1 issue · "Stay hungry, stay foolish" — founder mindset essay</div></div><div class="source-tags"><span class="pill pill-yellow">Founders</span></div></div>
+    <div class="source-row"><div><div class="source-name">mySecond (Ron) / Ask a Chief of Staff</div><div class="source-freq">2 issues · Which AI PM are you? + SkipUp / CoS automation</div></div><div class="source-tags"><span class="pill pill-purple">Product</span><span class="pill pill-blue">AI</span></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">🔍 What's Missing From Your Feed</div>
+    <div class="source-row"><div><div class="source-name">SemiAnalysis</div><div class="source-freq">GPU/chip infrastructure — essential pairing with the Nvidia/agent thesis</div></div><span class="pill pill-green">Strongly Add</span></div>
+    <div class="source-row"><div><div class="source-name">The Information</div><div class="source-freq">Deep-dive enterprise AI reporting; would complement a16z analysis</div></div><span class="pill pill-orange">Consider</span></div>
+    <div class="source-row"><div><div class="source-name">Newcomer (Eric Newcomer)</div><div class="source-freq">VC/startup reporting — solid Axios Pro Rata complement</div></div><span class="pill pill-orange">Consider</span></div>
+    <div class="source-row"><div><div class="source-name">Healthcare IT News</div><div class="source-freq">Fills coverage gap in healthcare AI beyond Out-of-Pocket</div></div><span class="pill pill-yellow">Nice to Have</span></div>
+  </div>
+</div>
+
+<div class="footer">Generated automatically from Gmail newsletters · Last refreshed: March 16, 2026 · holly.mishcut@gmail.com</div>
+
+<script>
+function switchTab(id, el) {
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// Topic Donut
+new Chart(document.getElementById('topicDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Agentic AI', 'Enterprise AI/ERP', 'AI Coding', 'Hiring/VC Jobs', 'Funding News', 'Healthcare AI', 'Consumer/Retail', 'Geopolitics', 'Other'],
+    datasets: [{ data: [22, 18, 16, 15, 10, 7, 5, 4, 3], backgroundColor: ['#58a6ff','#a371f7','#3fb950','#d29922','#f78166','#f85149','#79c0ff','#ffa657','#30363d'], borderWidth: 0 }]
+  },
+  options: { cutout: '65%', plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } } }
+});
+
+// Sector Sentiment Bar
+new Chart(document.getElementById('sectorSentiment'), {
+  type: 'bar',
+  data: {
+    labels: ['Agentic AI', 'AI Coding', 'Enterprise AI', 'Legal AI', 'Robotics', 'Healthcare AI', 'Stablecoins', 'Consumer DTC', 'Crypto', 'Trad. SaaS'],
+    datasets: [{ data: [95, 90, 85, 80, 75, 78, 65, 60, 55, 35], backgroundColor: ['#3fb950','#3fb950','#3fb950','#3fb950','#d29922','#3fb950','#d29922','#d29922','#d29922','#f85149'] }]
+  },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' }, max: 100 }, y: { ticks: { color: '#8b949e' }, grid: { display: false } } } }
+});
+
+// Signal Strength
+new Chart(document.getElementById('signalStrength'), {
+  type: 'bar',
+  data: {
+    labels: ['Agent Infra', 'AI Models', 'AI Coding', 'Enterprise ERP', 'Legal AI', 'Robotics', 'Healthcare AI', 'Stablecoins', 'Trad. SaaS'],
+    datasets: [{ data: [95, 92, 90, 85, 80, 75, 78, 65, 35], backgroundColor: ['#3fb950','#3fb950','#3fb950','#3fb950','#3fb950','#d29922','#d29922','#d29922','#f85149'] }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }, y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' }, max: 100 } } }
+});
+
+// Hiring Industry
+new Chart(document.getElementById('hiringIndustry'), {
+  type: 'doughnut',
+  data: {
+    labels: ['AI / Tech Startups', 'VC Firms', 'Family Offices', 'Consumer/Retail', 'Healthcare', 'Finance/Fintech'],
+    datasets: [{ data: [40, 25, 15, 10, 6, 4], backgroundColor: ['#58a6ff','#3fb950','#a371f7','#f78166','#f85149','#d29922'], borderWidth: 0 }]
+  },
+  options: { cutout: '65%', plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } } }
+});
+
+// Role Categories
+new Chart(document.getElementById('roleCategories'), {
+  type: 'bar',
+  data: {
+    labels: ['Engineering', 'Product / PM', 'Operations / CoS', 'Sales / GTM', 'VC Analyst/Assoc', 'Research', 'Finance / CFO'],
+    datasets: [{ data: [28, 20, 18, 12, 12, 6, 4], backgroundColor: '#58a6ff' }]
+  },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }, y: { ticks: { color: '#8b949e' }, grid: { display: false } } } }
+});
+
+// Velocity
+new Chart(document.getElementById('velocityChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Agentic AI', 'AI Models', 'AI Coding', 'Enterprise ERP', 'Healthcare AI', 'Productivity Gap', 'Stablecoins', 'SaaSpocalypse'],
+    datasets: [{ data: [14, 12, 10, 8, 6, 5, 3, 4], backgroundColor: ['#3fb950','#3fb950','#58a6ff','#58a6ff','#a371f7','#d29922','#d29922','#f85149'] }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }, y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } } } }
+});
+
+// Sentiment Delta
+new Chart(document.getElementById('sentimentChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Agentic AI', 'Enterprise ERP', 'On-Device AI', 'AI Legal', 'AI Coding', 'Robotics', 'Consumer DTC', 'Trad. SaaS', 'Legacy SIs'],
+    datasets: [{ data: [95, 85, 80, 80, 90, 75, 60, 35, 30], backgroundColor: ['#3fb950','#3fb950','#3fb950','#3fb950','#3fb950','#d29922','#d29922','#f85149','#f85149'] }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }, y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' }, max: 100 } } }
+});
+
+// People
+new Chart(document.getElementById('peopleChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Jensen Huang', 'Julien Bek', 'Nikhil Krishnan', 'Alfred Lin', 'Fei-Fei Li', 'Sam Lessin', 'Dan Primack', 'Boris Cherny'],
+    datasets: [{ data: [9, 6, 5, 5, 4, 3, 3, 2], backgroundColor: '#58a6ff' }]
+  },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }, y: { ticks: { color: '#8b949e' }, grid: { display: false } } } }
+});
+
+// Funding Donut
+new Chart(document.getElementById('fundingDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['AI Infrastructure', 'Legal AI', 'Robotics', 'AI Coding/Dev', 'Consumer DTC', 'Fintech/Stablecoin', 'Other'],
+    datasets: [{ data: [40, 18, 17, 14, 6, 3, 2], backgroundColor: ['#58a6ff','#a371f7','#f78166','#3fb950','#d29922','#f85149','#30363d'], borderWidth: 0 }]
+  },
+  options: { cutout: '65%', plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } } }
+});
+
+// Coverage Donut
+new Chart(document.getElementById('coverageDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['AI / Tech News', 'VC / Venture', 'Hiring / Jobs', 'General Business', 'Healthcare', 'International', 'Community/Events'],
+    datasets: [{ data: [28, 25, 22, 10, 6, 5, 4], backgroundColor: ['#58a6ff','#3fb950','#d29922','#a371f7','#f85149','#f78166','#79c0ff'], borderWidth: 0 }]
+  },
+  options: { cutout: '65%', plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } } }
+});
+</script>
+</body>
+</html>
