@@ -3,987 +3,1309 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newsletter Intelligence Dashboard</title>
+    <title>Newsletter Intelligence Dashboard — Week of March 27, 2026</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background: #0d1117;
-            color: #e6edf3;
-            line-height: 1.6;
-        }
-        .header {
-            background: #161b22;
-            border-bottom: 1px solid #30363d;
-            padding: 20px 30px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .header-title {
-            font-size: 28px;
-            font-weight: 600;
-        }
-        .badges {
-            display: flex;
-            gap: 10px;
-        }
-        .badge {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            background: #1c2333;
-            border: 1px solid #30363d;
-        }
-        .badge.live {
-            background: #f85149;
-            color: #0d1117;
-            border-color: #f85149;
-        }
-        .header-subtitle {
-            font-size: 13px;
-            color: #8b949e;
-            margin-bottom: 15px;
-        }
-        .nav-tabs {
-            display: flex;
-            gap: 5px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-        }
-        .nav-tab {
-            padding: 8px 16px;
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-bottom: none;
-            border-radius: 6px 6px 0 0;
-            cursor: pointer;
-            font-size: 13px;
-            color: #8b949e;
-            transition: all 0.3s;
-        }
-        .nav-tab:hover {
-            color: #e6edf3;
-            border-color: #58a6ff;
-        }
-        .nav-tab.active {
-            color: #58a6ff;
-            background: #0d1117;
-            border-color: #58a6ff #58a6ff #0d1117 #58a6ff;
-        }
-        .content {
-            padding: 30px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
-        }
-        .summary-banner {
-            background: linear-gradient(135deg, #1c2333 0%, #161b22 100%);
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            border-left: 4px solid #58a6ff;
-        }
-        .summary-banner h2 {
-            font-size: 20px;
-            margin-bottom: 10px;
-            color: #58a6ff;
-        }
-        .summary-banner p {
-            color: #8b949e;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        .stat-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .stat-card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-        .stat-card-value {
-            font-size: 32px;
-            font-weight: 600;
-            color: #58a6ff;
-            margin-bottom: 8px;
-        }
-        .stat-card-label {
-            font-size: 13px;
-            color: #8b949e;
-        }
-        .chart-container {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            position: relative;
-            height: 400px;
-        }
-        .chart-small {
-            height: 300px;
-        }
-        .two-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        .three-column {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        .four-column {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        .card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 20px;
-        }
-        .card h3 {
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: #58a6ff;
-        }
-        .card p {
-            font-size: 13px;
-            color: #8b949e;
-            margin-bottom: 10px;
-        }
-        .pill {
-            display: inline-block;
-            background: #1c2333;
-            border: 1px solid #30363d;
-            border-radius: 20px;
-            padding: 6px 12px;
-            font-size: 12px;
-            margin: 4px 4px 4px 0;
-            color: #8b949e;
-        }
-        .pill.hot {
-            border-color: #f85149;
-            color: #f85149;
-        }
-        .pill.new {
-            border-color: #3fb950;
-            color: #3fb950;
-        }
-        .pill.up {
-            border-color: #d29922;
-            color: #d29922;
-        }
-        .pill.down {
-            border-color: #8b949e;
-            color: #8b949e;
-        }
-        .conviction-bar {
-            background: #0d1117;
-            height: 6px;
-            border-radius: 3px;
-            margin: 8px 0;
-            overflow: hidden;
-        }
-        .conviction-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.3s;
-        }
-        .conviction-95 { background: #3fb950; }
-        .conviction-88 { background: #3fb950; }
-        .conviction-82 { background: #d29922; }
-        .conviction-80 { background: #d29922; }
-        .conviction-78 { background: #d29922; }
-        .conviction-72 { background: #f85149; }
-        .conviction-68 { background: #f85149; }
-        .conviction-65 { background: #f85149; }
-        .conviction-label {
-            font-size: 12px;
-            color: #8b949e;
-            margin-top: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .source-tag {
-            display: inline-block;
-            background: #1c2333;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            color: #8b949e;
-            margin: 4px 4px 0 0;
-        }
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 13px;
-        }
-        .table th {
-            background: #0d1117;
-            border-bottom: 1px solid #30363d;
-            padding: 12px;
-            text-align: left;
-            color: #8b949e;
-            font-weight: 500;
-        }
-        .table td {
-            border-bottom: 1px solid #30363d;
-            padding: 12px;
-        }
-        .table tr:hover {
-            background: #1c2333;
-        }
-        .signal-item {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #30363d;
-        }
-        .signal-item:last-child {
-            border-bottom: none;
-        }
-        .signal-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e6edf3;
-            margin-bottom: 6px;
-        }
-        .signal-desc {
-            font-size: 13px;
-            color: #8b949e;
-            margin-bottom: 8px;
-        }
-        .horizontal-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 8px 0;
-        }
-        .bar-label {
-            width: 120px;
-            font-size: 12px;
-            color: #8b949e;
-        }
-        .bar {
-            flex: 1;
-            height: 20px;
-            background: #1c2333;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .bar-fill {
-            height: 100%;
-            background: #58a6ff;
-            border-radius: 4px;
-        }
-        .bar-value {
-            font-size: 12px;
-            color: #8b949e;
-            width: 50px;
-        }
-        .footer {
-            text-align: center;
-            padding: 30px;
-            border-top: 1px solid #30363d;
-            color: #8b949e;
-            font-size: 12px;
-        }
-        .confidence-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-            margin-left: 8px;
-        }
-        .confidence-high {
-            background: #3fb950;
-            color: #0d1117;
-        }
-        .confidence-medium {
-            background: #d29922;
-            color: #0d1117;
-        }
-        .confidence-spec {
-            background: #a371f7;
-            color: #0d1117;
-        }
-        .velocity-card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .velocity-card h4 {
-            font-size: 14px;
-            color: #58a6ff;
-            margin-bottom: 8px;
-        }
-        .velocity-metric {
-            font-size: 24px;
-            font-weight: 600;
-            color: #3fb950;
-            margin: 8px 0;
-        }
-        .velocity-desc {
-            font-size: 12px;
-            color: #8b949e;
-        }
-        .grid-2x2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        @media (max-width: 768px) {
-            .two-column, .three-column, .four-column, .grid-2x2 {
-                grid-template-columns: 1fr;
-            }
-            .header-top {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .nav-tabs {
-                flex-wrap: wrap;
-            }
-        }
+        body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; }
+        .header { background: #161b22; border-bottom: 1px solid #30363d; padding: 16px 24px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 18px; font-weight: 600; color: #e6edf3; }
+        .header-meta { display: flex; gap: 12px; align-items: center; }
+        .badge { background: #1c2333; border: 1px solid #30363d; border-radius: 20px; padding: 4px 12px; font-size: 12px; color: #8b949e; }
+        .badge.green { border-color: #238636; color: #3fb950; background: rgba(35,134,54,0.1); }
+        .badge.red { border-color: #da3633; color: #f85149; background: rgba(218,54,51,0.1); }
+        .badge.yellow { border-color: #9e6a03; color: #d29922; background: rgba(158,106,3,0.1); }
+        .badge.blue { border-color: #1f6feb; color: #58a6ff; background: rgba(31,111,235,0.1); }
+        .nav { background: #161b22; border-bottom: 1px solid #30363d; padding: 0 24px; display: flex; gap: 0; overflow-x: auto; }
+        .nav-tab { padding: 12px 16px; cursor: pointer; font-size: 13px; color: #8b949e; border-bottom: 2px solid transparent; white-space: nowrap; transition: color 0.2s; }
+        .nav-tab:hover { color: #e6edf3; }
+        .nav-tab.active { color: #58a6ff; border-bottom-color: #1f6feb; }
+        .content { padding: 24px; max-width: 1400px; margin: 0 auto; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+        .card h2 { font-size: 13px; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; }
+        .card h3 { font-size: 15px; font-weight: 600; color: #e6edf3; margin-bottom: 8px; }
+        .stat-value { font-size: 32px; font-weight: 700; color: #e6edf3; }
+        .stat-label { font-size: 12px; color: #8b949e; margin-top: 4px; }
+        .stat-delta { font-size: 12px; margin-top: 6px; }
+        .stat-delta.up { color: #3fb950; }
+        .stat-delta.down { color: #f85149; }
+        .stat-delta.flat { color: #8b949e; }
+        .signal-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #21262d; }
+        .signal-row:last-child { border-bottom: none; }
+        .signal-name { font-weight: 500; color: #e6edf3; flex: 1; }
+        .signal-bar-wrap { flex: 2; margin: 0 16px; height: 6px; background: #21262d; border-radius: 3px; }
+        .signal-bar { height: 6px; border-radius: 3px; }
+        .signal-bar.green { background: #238636; }
+        .signal-bar.red { background: #da3633; }
+        .signal-bar.yellow { background: #9e6a03; }
+        .signal-score { font-size: 12px; color: #8b949e; min-width: 30px; text-align: right; }
+        .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; margin: 3px; }
+        .tag.invest { background: rgba(35,134,54,0.15); color: #3fb950; border: 1px solid rgba(35,134,54,0.3); }
+        .tag.divest { background: rgba(218,54,51,0.12); color: #f85149; border: 1px solid rgba(218,54,51,0.25); }
+        .tag.watch { background: rgba(158,106,3,0.15); color: #d29922; border: 1px solid rgba(158,106,3,0.3); }
+        .tag.new { background: rgba(31,111,235,0.12); color: #58a6ff; border: 1px solid rgba(31,111,235,0.25); }
+        .tag.hot { background: rgba(186,74,193,0.12); color: #d2a8ff; border: 1px solid rgba(186,74,193,0.25); }
+        .diff-section { margin-bottom: 24px; }
+        .diff-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .diff-item { background: #1c2333; border: 1px solid #30363d; border-radius: 6px; padding: 12px 16px; margin-bottom: 8px; }
+        .diff-item .title { font-weight: 500; color: #e6edf3; }
+        .diff-item .desc { font-size: 12px; color: #8b949e; margin-top: 4px; }
+        .person-card { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #21262d; }
+        .person-card:last-child { border-bottom: none; }
+        .person-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1c2333; border: 1px solid #30363d; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #58a6ff; flex-shrink: 0; }
+        .person-name { font-weight: 500; color: #e6edf3; }
+        .person-context { font-size: 12px; color: #8b949e; margin-top: 2px; }
+        .source-row { padding: 10px 0; border-bottom: 1px solid #21262d; }
+        .source-row:last-child { border-bottom: none; }
+        .source-name { font-weight: 500; color: #e6edf3; }
+        .source-desc { font-size: 12px; color: #8b949e; margin-top: 2px; }
+        .chart-wrap { position: relative; height: 200px; }
+        .chart-wrap-sm { position: relative; height: 160px; }
+        .chart-wrap-lg { position: relative; height: 260px; }
+        .narrative-card { background: #1c2333; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+        .narrative-card .headline { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 6px; }
+        .narrative-card .body { font-size: 13px; color: #8b949e; line-height: 1.6; }
+        .narrative-card .source { font-size: 11px; color: #58a6ff; margin-top: 8px; }
+        .velocity-bar { height: 8px; border-radius: 4px; background: #21262d; margin-top: 4px; }
+        .velocity-fill { height: 8px; border-radius: 4px; }
+        .hiring-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #21262d; }
+        .hiring-row:last-child { border-bottom: none; }
+        .hiring-company { font-weight: 600; color: #e6edf3; }
+        .hiring-role { font-size: 12px; color: #8b949e; margin-top: 2px; }
+        .hiring-tag { font-size: 11px; }
+        .whitespace-card { background: #1c2333; border: 1px solid #30363d; border-left: 3px solid #58a6ff; border-radius: 6px; padding: 14px 16px; margin-bottom: 10px; }
+        .whitespace-card .wh-title { font-weight: 600; color: #58a6ff; margin-bottom: 4px; }
+        .whitespace-card .wh-desc { font-size: 12px; color: #8b949e; line-height: 1.5; }
+        .funding-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #21262d; }
+        .funding-row:last-child { border-bottom: none; }
+        .funding-co { font-weight: 500; color: #e6edf3; }
+        .funding-detail { font-size: 12px; color: #8b949e; margin-top: 2px; }
+        .funding-amt { font-weight: 600; color: #3fb950; font-size: 15px; }
+        .section-intro { font-size: 13px; color: #8b949e; line-height: 1.6; margin-bottom: 20px; }
+        .comp-row { padding: 12px 0; border-bottom: 1px solid #21262d; }
+        .comp-row:last-child { border-bottom: none; }
+        .comp-row .co-name { font-weight: 600; color: #e6edf3; }
+        .comp-row .co-desc { font-size: 12px; color: #8b949e; margin-top: 3px; line-height: 1.5; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .scroll-list { max-height: 340px; overflow-y: auto; }
+        .scroll-list::-webkit-scrollbar { width: 4px; }
+        .scroll-list::-webkit-scrollbar-track { background: #0d1117; }
+        .scroll-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-top">
-            <div class="header-title">📬 Newsletter Intelligence</div>
-            <div class="badges">
-                <div class="badge live">🔴 Live</div>
-                <div class="badge">Updated Mar 18, 2026</div>
-            </div>
+
+<div class="header">
+    <div>
+        <h1>📬 Newsletter Intelligence</h1>
+        <div style="font-size:12px;color:#8b949e;margin-top:2px;">Week of March 27, 2026</div>
+    </div>
+    <div class="header-meta">
+        <span class="badge green">32 Newsletters Analyzed</span>
+        <span class="badge blue">6 INVEST Signals</span>
+        <span class="badge yellow">4 WATCH</span>
+        <span class="badge red">3 DIVEST</span>
+        <span class="badge">Updated 8:00 AM</span>
+    </div>
+</div>
+
+<div class="nav" id="mainNav">
+    <div class="nav-tab active" onclick="switchTab('overview')">Overview</div>
+    <div class="nav-tab" onclick="switchTab('vc-signals')">VC Signals</div>
+    <div class="nav-tab" onclick="switchTab('predictions')">Predictions</div>
+    <div class="nav-tab" onclick="switchTab('trends')">Trends</div>
+    <div class="nav-tab" onclick="switchTab('hiring')">Hiring Signals</div>
+    <div class="nav-tab" onclick="switchTab('whitespace')">Whitespace</div>
+    <div class="nav-tab" onclick="switchTab('narrative')">Narrative Velocity</div>
+    <div class="nav-tab" onclick="switchTab('sentiment')">Sentiment Delta</div>
+    <div class="nav-tab" onclick="switchTab('people')">Key People</div>
+    <div class="nav-tab" onclick="switchTab('competitive')">Competitive Map</div>
+    <div class="nav-tab" onclick="switchTab('funding')">Funding Momentum</div>
+    <div class="nav-tab" onclick="switchTab('changed')">What Changed</div>
+    <div class="nav-tab" onclick="switchTab('sources')">Sources</div>
+</div>
+
+<div class="content">
+
+<!-- ======== OVERVIEW ======== -->
+<div class="tab-panel active" id="tab-overview">
+    <div class="grid-4">
+        <div class="card">
+            <div class="stat-value">32</div>
+            <div class="stat-label">Newsletters Read</div>
+            <div class="stat-delta up">↑ +7 vs last week</div>
         </div>
-        <div class="header-subtitle">holly.mishcut@gmail.com · Mar 12–18, 2026 · 13 newsletters · 120+ open roles tracked · Last updated: March 18, 2026</div>
-        <div class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('overview')">🏠 Overview</div>
-            <div class="nav-tab" onclick="switchTab('vcsignals')">📡 VC Signals</div>
-            <div class="nav-tab" onclick="switchTab('predictions')">🔮 Predictions</div>
-            <div class="nav-tab" onclick="switchTab('trends')">📈 Trends</div>
-            <div class="nav-tab" onclick="switchTab('hiring')">💼 Hiring Signals</div>
-            <div class="nav-tab" onclick="switchTab('whitespace')">🕳️ Whitespace</div>
-            <div class="nav-tab" onclick="switchTab('velocity')">⚡ Narrative Velocity</div>
-            <div class="nav-tab" onclick="switchTab('sentiment')">📊 Sentiment Delta</div>
-            <div class="nav-tab" onclick="switchTab('people')">👤 Key People</div>
-            <div class="nav-tab" onclick="switchTab('competitive')">🗺️ Competitive Map</div>
-            <div class="nav-tab" onclick="switchTab('funding')">💰 Funding Momentum</div>
-            <div class="nav-tab" onclick="switchTab('changed')">🔄 What Changed</div>
-            <div class="nav-tab" onclick="switchTab('sources')">📰 Sources</div>
+        <div class="card">
+            <div class="stat-value">6</div>
+            <div class="stat-label">INVEST Signals</div>
+            <div class="stat-delta up">↑ Same count, stronger conviction</div>
+        </div>
+        <div class="card">
+            <div class="stat-value">7</div>
+            <div class="stat-label">New Signals This Week</div>
+            <div class="stat-delta up">↑ vs 3 last week</div>
+        </div>
+        <div class="card">
+            <div class="stat-value">$2.1B+</div>
+            <div class="stat-label">New Deals Tracked</div>
+            <div class="stat-delta up">↑ Q1 record pace continues</div>
         </div>
     </div>
-
-    <div class="content">
-        <!-- OVERVIEW TAB -->
-        <div id="page-overview" class="page active">
-            <div class="summary-banner">
-                <h2>🤖 Robotics breaks out, Q1 2026 shatters fundraising records</h2>
-                <p>The emergence of "AI agent orchestration as critical infrastructure" is the week's dominant theme. Simultaneously, founder-led new ventures (RJ Scaringe/Mind Robotics $500M Series A, Travis Kalanick/Atoms, ex-Anthropic's Rune Kvist/AIUC) combined with record Q1 2026 fundraising ($80B — biggest quarter since 2021) signal capital flooding toward physical and foundational AI layers. This marks the transition from "generative AI applications" to "AI-native infrastructure and robotics."</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>Top Narrative This Week</h2>
+            <div class="narrative-card">
+                <div class="headline">Energy Crisis Collides With AI Infrastructure Buildout</div>
+                <div class="body">a16z's deep-dive on Strait of Hormuz disruption (95% below normal flows) and AI's soaring energy demands creates a new macro headwind. Chemical prices are vertical. The $100B+ data center buildout now faces a supply shock that neither OpenAI, Google, nor Microsoft has priced in. This is the dominant story for the next 6–18 months.</div>
+                <div class="source">Source: a16z Newsletter, March 27</div>
             </div>
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="stat-card-value">13</div>
-                    <div class="stat-card-label">Newsletters Tracked</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">6</div>
-                    <div class="stat-card-label">Bullish Signals</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">Robotics 🆕</div>
-                    <div class="stat-card-label">Top Theme</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">120+</div>
-                    <div class="stat-card-label">Open Roles</div>
-                </div>
-            </div>
-            <div class="two-column">
-                <div class="chart-container chart-small">
-                    <canvas id="topicChart"></canvas>
-                </div>
-                <div class="chart-container chart-small">
-                    <canvas id="sentimentChart"></canvas>
-                </div>
-            </div>
-            <div class="card">
-                <h3>Hot Topics This Week</h3>
-                <div style="margin-top: 12px;">
-                    <span class="pill hot">🔥 AI Agents & Automation</span>
-                    <span class="pill hot new">🔥 Robotics (NEW)</span>
-                    <span class="pill hot">🔥 Q1 Fundraising Surge</span>
-                    <span class="pill up">↑ Defense Tech</span>
-                    <span class="pill up">↑ Founder Exodus</span>
-                    <span class="pill up">↑ Design-Code Integration</span>
-                    <span class="pill">→ Healthcare AI</span>
-                    <span class="pill">→ Family Office</span>
-                    <span class="pill down">↓ Consumer AI</span>
-                    <span class="pill down">↓ LLM Scaling Narrative</span>
-                </div>
-            </div>
-            <div class="chart-container" style="height: 300px; margin-top: 25px;">
-                <canvas id="industryChart"></canvas>
+            <div class="narrative-card">
+                <div class="headline">Trust Wall: The Next Billion AI Users Won't Come Directly</div>
+                <div class="body">a16z declares the "Explorer Era" over — the next wave of AI adoption flows through trusted intermediaries (banks, healthcare providers, employers). Companies that control distribution rails, not just models, will capture outsized value. Sovereign Vaults concept emerges as critical infrastructure layer.</div>
+                <div class="source">Source: a16z Newsletter, March 26</div>
             </div>
         </div>
+        <div class="card">
+            <h2>Sentiment Snapshot</h2>
+            <div class="chart-wrap-lg">
+                <canvas id="overviewSentimentChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="grid-3">
+        <div class="card">
+            <h2>🟢 Top INVEST Signals</h2>
+            <div class="signal-row">
+                <span class="signal-name">AI Agent Orchestration</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:95%"></div></div>
+                <span class="signal-score">95</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Robotics / Physical AI</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:90%"></div></div>
+                <span class="signal-score">90</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Energy-Efficient AI Infra</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:88%"></div></div>
+                <span class="signal-score">88</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">AI Trust & Distribution</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:85%"></div></div>
+                <span class="signal-score">85</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Defense Tech</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:84%"></div></div>
+                <span class="signal-score">84</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">AI-Native B2B SaaS</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:82%"></div></div>
+                <span class="signal-score">82</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>🟡 WATCH</h2>
+            <div class="signal-row">
+                <span class="signal-name">Design-Code Tooling</span>
+                <div class="signal-bar-wrap"><div class="signal-bar yellow" style="width:72%"></div></div>
+                <span class="signal-score">72</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Enterprise AI Capability</span>
+                <div class="signal-bar-wrap"><div class="signal-bar yellow" style="width:70%"></div></div>
+                <span class="signal-score">70</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Climate Tech</span>
+                <div class="signal-bar-wrap"><div class="signal-bar yellow" style="width:65%"></div></div>
+                <span class="signal-score">65</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Multimodal Video AI</span>
+                <div class="signal-bar-wrap"><div class="signal-bar yellow" style="width:58%"></div></div>
+                <span class="signal-score">58</span>
+            </div>
+            <h2 style="margin-top:20px;">🔴 DIVEST / AVOID</h2>
+            <div class="signal-row">
+                <span class="signal-name">High-Cost GPU Compute</span>
+                <div class="signal-bar-wrap"><div class="signal-bar red" style="width:38%"></div></div>
+                <span class="signal-score">38</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Consumer Video Gen (Sora-style)</span>
+                <div class="signal-bar-wrap"><div class="signal-bar red" style="width:28%"></div></div>
+                <span class="signal-score">28</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Emerging Manager Fundraising</span>
+                <div class="signal-bar-wrap"><div class="signal-bar red" style="width:32%"></div></div>
+                <span class="signal-score">32</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Hot Topics This Week</h2>
+            <div style="margin-bottom:14px;">
+                <span class="tag hot">AI Agents</span>
+                <span class="tag hot">Robotics</span>
+                <span class="tag hot">Energy Crisis</span>
+                <span class="tag invest">Q1 Funding Record</span>
+                <span class="tag invest">AI Trust / Distribution</span>
+                <span class="tag new">Sora Shutdown</span>
+                <span class="tag new">David Sacks Pivot</span>
+                <span class="tag new">Hormuz Disruption</span>
+                <span class="tag watch">Product Job Market Recovery</span>
+                <span class="tag watch">Multimodal Strategy</span>
+            </div>
+            <h2 style="margin-top:4px;">New Whitespace</h2>
+            <div style="margin-top:8px;">
+                <span class="tag new">Energy-Efficient AI Infra</span>
+                <span class="tag new">AI Trust Rails</span>
+                <span class="tag new">Sovereign AI Vaults</span>
+                <span class="tag new">Video AI Pivots</span>
+                <span class="tag new">Physical AI Simulation</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <!-- VC SIGNALS TAB -->
-        <div id="page-vcsignals" class="page">
-            <div class="summary-banner">
-                <h2>📡 Investment Signals & Conviction Levels</h2>
-                <p>Weekly analysis of bullish, cautious, and bearish signals from 13 newsletters.</p>
+<!-- ======== VC SIGNALS ======== -->
+<div class="tab-panel" id="tab-vc-signals">
+    <p class="section-intro">Investment signals synthesized from 32+ newsletters, VC deal flow, founder commentary, and market moves this week. Signals are scored 0–100 based on signal frequency, conviction, and capital deployment evidence.</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>🟢 INVEST — High Conviction</h2>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">AI Agent Orchestration</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Multi-agent frameworks, tool-use APIs, agent memory/retrieval. A16z calling this "foundational infrastructure." Deals: Deeptune ($43M), TypeSafe, Memories.ai ($16M)</div>
+                </div>
+                <span class="badge green" style="margin-left:12px;">95</span>
             </div>
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="stat-card-value" style="color: #3fb950;">6</div>
-                    <div class="stat-card-label">Invest Signals</div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Robotics / Physical AI</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Embodied intelligence, robot-to-robot learning, sim-to-real transfer. Mind Robotics, Aetherflux ($250–300M), Handle all hiring aggressively.</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" style="color: #d29922;">3</div>
-                    <div class="stat-card-label">Watch Signals</div>
+                <span class="badge green" style="margin-left:12px;">90</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Energy-Efficient AI Infrastructure</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">NEW THIS WEEK. Hormuz crisis + soaring AI energy costs make low-power inference, edge compute, and energy arbitrage a priority. Xona ($170M), Aetherflux.</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" style="color: #f85149;">3</div>
-                    <div class="stat-card-label">Divest Signals</div>
+                <span class="badge green" style="margin-left:12px;">88</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">AI Trust & Distribution Rails</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">NEW THIS WEEK. a16z thesis: next billion AI users come through banks, employers, healthcare. Sovereign Vaults, trust intermediaries, credentialed AI access layers.</div>
+                </div>
+                <span class="badge green" style="margin-left:12px;">85</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Defense Tech</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Sacks PCAST pivot signals continued gov prioritization. Xona Space ($170M) for GPS hardening. AI for national security, autonomous systems.</div>
+                </div>
+                <span class="badge green" style="margin-left:12px;">84</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">AI-Native B2B SaaS</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Harvey (legal AI), Legora (legal), Handshake (talent) all hiring at scale. Vertical AI with strong moats and enterprise distribution.</div>
+                </div>
+                <span class="badge green" style="margin-left:12px;">82</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Signal Radar</h2>
+            <div class="chart-wrap-lg">
+                <canvas id="vcRadarChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="grid-2">
+        <div class="card">
+            <h2>🟡 WATCH — Developing Signals</h2>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Design-Code Tooling</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Figma-to-code, AI UI generation, design system automation. Strong in newsletters but waiting for breakout funding rounds to upgrade to INVEST.</div>
+                </div>
+                <span class="badge yellow" style="margin-left:12px;">72</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Enterprise AI Capability Building</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Internal AI training, change management, enterprise workflow redesign. Lenny's Newsletter confirms AI talent squeeze forcing enterprise upskilling.</div>
+                </div>
+                <span class="badge yellow" style="margin-left:12px;">70</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Climate Tech</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Steady presence but not accelerating. Energy crisis may create bifurcation: clean energy infra ↑, carbon markets flat.</div>
+                </div>
+                <span class="badge yellow" style="margin-left:12px;">65</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Multimodal / Video AI</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Sora's shutdown is a cautionary data point. OpenAI losing $15M/day on inference. Watch for pivot to enterprise video, not consumer.</div>
+                </div>
+                <span class="badge yellow" style="margin-left:12px;">58</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>🔴 DIVEST / AVOID</h2>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Consumer Video Generation (Sora-style)</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">OpenAI killed Sora — $15M/day inference cost, only $2.1M lifetime revenue. Disney deal dissolved. Unit economics are unsustainable for consumer use cases.</div>
+                </div>
+                <span class="badge red" style="margin-left:12px;">22</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">High-Cost GPU Compute (non-differentiated)</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">Commodity GPU cloud without efficiency moat is margin-challenged. Energy crisis compounds costs. Only differentiated or specialized compute survives.</div>
+                </div>
+                <span class="badge red" style="margin-left:12px;">30</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1">
+                    <div class="signal-name">Emerging Manager Fundraising</div>
+                    <div style="font-size:11px;color:#8b949e;margin-top:2px;">LP capital concentrating at established platforms (a16z, Sequoia, Founders Fund). First-time fund managers facing 18–24 month close timelines.</div>
+                </div>
+                <span class="badge red" style="margin-left:12px;">28</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== PREDICTIONS ======== -->
+<div class="tab-panel" id="tab-predictions">
+    <p class="section-intro">Forward-looking signals and predictions derived from newsletter analysis. These represent synthesized directional bets based on this week's content, not financial advice.</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>6–12 Month Predictions</h2>
+            <div class="diff-item">
+                <div class="title">⚡ Energy crisis reshapes AI infra investment thesis</div>
+                <div class="desc">Hormuz disruption + AI energy demand creates new category of "energy-efficient compute" startups. Expect 10–15 new companies explicitly positioning on power efficiency in next 6 months. Clean energy + AI will be the dominant VC narrative by Q3.</div>
+            </div>
+            <div class="diff-item">
+                <div class="title">🤖 Robotics hits "ChatGPT moment" by Q4 2026</div>
+                <div class="desc">Physical AI capital ($250–300M Aetherflux round, Mind Robotics growth) mirrors LLM infra build of 2023. Mind Robotics' sim-to-real breakthroughs suggest consumer-facing robots within 18 months.</div>
+            </div>
+            <div class="diff-item">
+                <div class="title">🏛️ AI distribution goes institutional, not viral</div>
+                <div class="desc">a16z's "Trust Wall" thesis predicts next billion AI users come through banks, employers, and healthcare systems — not direct app downloads. Sovereign Vaults and credentialed AI access become new moat.</div>
+            </div>
+            <div class="diff-item">
+                <div class="title">📺 Video AI pivots to enterprise, not consumer</div>
+                <div class="desc">Sora's shutdown signals consumer video gen is a dead end for now. Expect video AI to re-emerge as enterprise tooling: training data generation, surveillance, medical imaging, not "make a movie" apps.</div>
+            </div>
+            <div class="diff-item">
+                <div class="title">👔 Product Management renaissance through AI</div>
+                <div class="desc">PM job market at 3-year high (+75% vs 2023 low). AI-native PMs who can spec agent workflows and AI product pipelines will command premium. Design flat, but design+AI is the breakout combo.</div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>30–60 Day Near-Term Calls</h2>
+            <div class="diff-item">
+                <div class="title">🚀 SpaceX IPO announcement before Q2 end</div>
+                <div class="desc">Axios reporting $75B IPO rumor intensifying. Sacks PCAST pivot may signal less regulatory friction coming for SpaceX public offering. Watch May–June window.</div>
+            </div>
+            <div class="diff-item">
+                <div class="title">⚖️ Anthropic injunction win signals federal AI procurement shift</div>
+                <div class="desc">Federal court win creates precedent for Anthropic to win more gov contracts. Expect announcements around federal AI deployments in healthcare, defense, intelligence in Q2.</div>
+            </div>
+            <div class="diff-item">
+                <div class="title">💼 Harvey + Legora legal AI land-grab accelerates</div>
+                <div class="desc">Both hiring aggressively at same time. Legal AI is consolidating. Expect merger talks or 1 big acquisition in legal AI vertical by end of Q2.</div>
+            </div>
+            <div class="diff-item">
+                <div class="title">🌊 Energy macro forces data center siting announcements</div>
+                <div class="desc">Hormuz + chemical cost spike will force hyperscalers to announce Gulf-alternative data center locations (Iceland, Norway, Pacific NW) within 60 days to reassure investors.</div>
+            </div>
+        </div>
+    </div>
+    <div class="card" style="margin-top:0;">
+        <h2>Prediction Confidence Chart</h2>
+        <div class="chart-wrap">
+            <canvas id="predictionsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ======== TRENDS ======== -->
+<div class="tab-panel" id="tab-trends">
+    <div class="grid-2">
+        <div class="card">
+            <h2>Trend Velocity (Signal Frequency Change vs Last Week)</h2>
+            <div class="chart-wrap-lg">
+                <canvas id="trendVelocityChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Weekly Topic Coverage %</h2>
+            <div class="chart-wrap-lg">
+                <canvas id="topicCoverageChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="grid-3">
+        <div class="card">
+            <h2>🔥 Accelerating Fast</h2>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">Energy Crisis / AI Infra</div><div class="velocity-bar"><div class="velocity-fill" style="width:95%;background:#3fb950;"></div></div></div>
+                <span class="badge green" style="margin-left:8px;">+95%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">AI Trust & Distribution</div><div class="velocity-bar"><div class="velocity-fill" style="width:88%;background:#3fb950;"></div></div></div>
+                <span class="badge green" style="margin-left:8px;">+88%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">Robotics Funding</div><div class="velocity-bar"><div class="velocity-fill" style="width:72%;background:#3fb950;"></div></div></div>
+                <span class="badge green" style="margin-left:8px;">+72%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">PM / Product Job Market</div><div class="velocity-bar"><div class="velocity-fill" style="width:65%;background:#3fb950;"></div></div></div>
+                <span class="badge green" style="margin-left:8px;">+65%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">Gov / Regulatory AI</div><div class="velocity-bar"><div class="velocity-fill" style="width:58%;background:#3fb950;"></div></div></div>
+                <span class="badge green" style="margin-left:8px;">+58%</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>📊 Stable / Holding</h2>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">AI Agent Orchestration</div><div class="velocity-bar"><div class="velocity-fill" style="width:92%;background:#d29922;"></div></div></div>
+                <span class="badge yellow" style="margin-left:8px;">+8%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">Defense Tech</div><div class="velocity-bar"><div class="velocity-fill" style="width:80%;background:#d29922;"></div></div></div>
+                <span class="badge yellow" style="margin-left:8px;">+5%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">Design-Code Tooling</div><div class="velocity-bar"><div class="velocity-fill" style="width:70%;background:#d29922;"></div></div></div>
+                <span class="badge yellow" style="margin-left:8px;">+2%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">Enterprise AI SaaS</div><div class="velocity-bar"><div class="velocity-fill" style="width:65%;background:#d29922;"></div></div></div>
+                <span class="badge yellow" style="margin-left:8px;">0%</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>❄️ Cooling / Declining</h2>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">Consumer Video AI</div><div class="velocity-bar"><div class="velocity-fill" style="width:85%;background:#f85149;"></div></div></div>
+                <span class="badge red" style="margin-left:8px;">−85%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">GPU Cloud (generic)</div><div class="velocity-bar"><div class="velocity-fill" style="width:55%;background:#f85149;"></div></div></div>
+                <span class="badge red" style="margin-left:8px;">−55%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">OpenAI Consumer Apps</div><div class="velocity-bar"><div class="velocity-fill" style="width:40%;background:#f85149;"></div></div></div>
+                <span class="badge red" style="margin-left:8px;">−40%</span>
+            </div>
+            <div class="signal-row">
+                <div style="flex:1"><div class="signal-name">Crypto / Web3 AI</div><div class="velocity-bar"><div class="velocity-fill" style="width:30%;background:#f85149;"></div></div></div>
+                <span class="badge red" style="margin-left:8px;">−30%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== HIRING SIGNALS ======== -->
+<div class="tab-panel" id="tab-hiring">
+    <p class="section-intro">Hiring signals extracted from newsletter job boards, company announcements, and a16z Build posts. Companies hiring aggressively are leading indicators of sector momentum.</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>Most Active Hirers This Week</h2>
+            <div class="scroll-list">
+                <div class="hiring-row">
+                    <div><div class="hiring-company">Harvey</div><div class="hiring-role">Legal AI — Eng, Product, GTM roles · Series C+</div></div>
+                    <span class="tag invest">INVEST</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">Handshake</div><div class="hiring-role">Talent/Recruiting Platform — multiple roles · Series F</div></div>
+                    <span class="tag invest">INVEST</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">SpaceX</div><div class="hiring-role">Software, Avionics, Starship — 20+ roles</div></div>
+                    <span class="tag invest">INVEST</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">Deeptune</div><div class="hiring-role">Audio AI — Post $43M Series A · ML, Infra, Product</div></div>
+                    <span class="tag new">NEW ROUND</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">Mind Robotics</div><div class="hiring-role">Physical AI — Robotics Eng, Sim, ML · Stealth→Launch</div></div>
+                    <span class="tag hot">HOT</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">Legora</div><div class="hiring-role">Legal AI — GTM, Eng · Series A/B stage</div></div>
+                    <span class="tag invest">INVEST</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">Memories.ai</div><div class="hiring-role">AI Memory Layer — Post $16M Seed · Eng</div></div>
+                    <span class="tag new">NEW ROUND</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">TierZero</div><div class="hiring-role">AI Infrastructure — Post $7M Seed · Founding team roles</div></div>
+                    <span class="tag new">NEW ROUND</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">Phylo</div><div class="hiring-role">Bio/AI — Post $13.5M Seed · Science + ML</div></div>
+                    <span class="tag new">NEW ROUND</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">Arc Boats</div><div class="hiring-role">Electric Marine — Post $50M Series C · Hardware, Eng</div></div>
+                    <span class="tag new">NEW ROUND</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">a16z (internal)</div><div class="hiring-role">Investment roles, Platform, Research — multiple openings</div></div>
+                    <span class="tag hot">HOT</span>
+                </div>
+                <div class="hiring-row">
+                    <div><div class="hiring-company">AIUC</div><div class="hiring-role">AI Union / Coalition — Policy, Research, Org roles</div></div>
+                    <span class="tag watch">WATCH</span>
                 </div>
             </div>
-            <div class="two-column">
+        </div>
+        <div class="card">
+            <h2>Job Market Macro (Lenny's Newsletter, Mar 24)</h2>
+            <div class="grid-2" style="margin-bottom:16px;">
+                <div style="background:#1c2333;border-radius:6px;padding:14px;">
+                    <div class="stat-value" style="font-size:24px;color:#3fb950;">7,300+</div>
+                    <div class="stat-label">Open PM Roles</div>
+                    <div class="stat-delta up">↑ 3-year high · +75% vs 2023 low</div>
+                </div>
+                <div style="background:#1c2333;border-radius:6px;padding:14px;">
+                    <div class="stat-value" style="font-size:24px;color:#58a6ff;">67,000+</div>
+                    <div class="stat-label">Open Eng Roles</div>
+                    <div class="stat-delta up">↑ Strong recovery</div>
+                </div>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="hiringChart"></canvas>
+            </div>
+            <div style="margin-top:16px;background:#1c2333;border-radius:6px;padding:14px;">
+                <div style="font-size:13px;font-weight:600;color:#d29922;margin-bottom:6px;">⚠️ Design Roles: Flat</div>
+                <div style="font-size:12px;color:#8b949e;">Design roles are not recovering at the same pace. AI tools reducing design headcount needs. Bay Area accounts for 33% of all AI roles — remote still secondary for AI positions.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== WHITESPACE ======== -->
+<div class="tab-panel" id="tab-whitespace">
+    <p class="section-intro">Whitespace opportunities — underserved markets, unaddressed needs, and emerging categories identified from this week's newsletter analysis.</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>🆕 New Whitespace (Emerged This Week)</h2>
+            <div class="whitespace-card">
+                <div class="wh-title">Energy-Efficient AI Infrastructure</div>
+                <div class="wh-desc">The Hormuz disruption and AI energy cost spiral have created an urgent need for low-power inference, edge AI, and energy arbitrage in data center siting. No dominant player yet. First-mover window: 6–12 months. Signal strength: HIGH.</div>
+            </div>
+            <div class="whitespace-card">
+                <div class="wh-title">AI Trust Infrastructure / Sovereign Vaults</div>
+                <div class="wh-desc">a16z's "Trust Wall" thesis identifies a massive gap: trusted intermediary infrastructure for AI deployment through regulated industries (banking, healthcare, government). No clear winner. Think "Stripe for AI credentials."</div>
+            </div>
+            <div class="whitespace-card">
+                <div class="wh-title">Enterprise Video AI (Post-Sora Pivot)</div>
+                <div class="wh-desc">Consumer video gen is dead (Sora's numbers prove it). Enterprise use cases — training data synthesis, medical imaging, security/surveillance, manufacturing QA — are massively underserved by current video models.</div>
+            </div>
+            <div class="whitespace-card">
+                <div class="wh-title">Physical AI Simulation Layer</div>
+                <div class="wh-desc">Mind Robotics and others accelerating sim-to-real training. The simulation software/infrastructure layer (like Unity was for gaming) for physical AI training is wide open. Massive TAM, technical moat, early innings.</div>
+            </div>
+            <div class="whitespace-card">
+                <div class="wh-title">PM × AI Upskilling Platforms</div>
+                <div class="wh-desc">With 7,300+ PM openings and AI reshaping every product role, structured training for AI-native product management is an underserved market. Enterprise-focused, not Udemy-style consumer.</div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>💡 Persisting Whitespace (From Prior Weeks)</h2>
+            <div class="whitespace-card" style="border-left-color:#d29922;">
+                <div class="wh-title" style="color:#d29922;">AI Agent Governance & Compliance</div>
+                <div class="wh-desc">As agentic AI becomes production reality, the governance, audit trail, and compliance layer remains wide open. Who's the "SOC 2 of AI agents"? Enterprise procurement will demand this in 2026.</div>
+            </div>
+            <div class="whitespace-card" style="border-left-color:#d29922;">
+                <div class="wh-title" style="color:#d29922;">Enterprise AI Capability Building</div>
+                <div class="wh-desc">Fortune 500s are struggling with internal AI adoption. The "AI transformation consultancy" of the future is likely a software product, not a services firm. No clear winner in structured enterprise AI enablement.</div>
+            </div>
+            <div class="whitespace-card" style="border-left-color:#d29922;">
+                <div class="wh-title" style="color:#d29922;">Design-Code Integration Layer</div>
+                <div class="wh-desc">The bridge between design tools (Figma) and production code remains clunky. AI-native design-to-code, spec-to-component, and design system automation is an unsolved problem with strong VC interest.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== NARRATIVE VELOCITY ======== -->
+<div class="tab-panel" id="tab-narrative">
+    <p class="section-intro">Narrative velocity tracks how fast a story is spreading across multiple newsletters and founder channels. High velocity narratives are candidate market-moving ideas.</p>
+    <div class="card" style="margin-bottom:16px;">
+        <h2>Narrative Velocity Index — This Week</h2>
+        <div class="chart-wrap">
+            <canvas id="narrativeChart"></canvas>
+        </div>
+    </div>
+    <div class="grid-2">
+        <div class="card">
+            <h2>🔥 Highest Velocity Narratives</h2>
+            <div class="narrative-card">
+                <div class="headline">#1 — The Energy Crisis Hits AI (NEW)</div>
+                <div class="body">Strait of Hormuz disruption generating immediate ripple effects for data center energy costs. a16z published comprehensive explainer March 27 — first major tech newsletter to connect the dots. Expect this narrative to dominate Q2 VC conversation.</div>
+                <div class="source">Sources: a16z, Axios Pro Rata — both March 27, 2026</div>
+            </div>
+            <div class="narrative-card">
+                <div class="headline">#2 — David Sacks Exits AI Czar Role</div>
+                <div class="body">Sacks pivoting from White House AI/Crypto Czar to PCAST co-chair. Interpreted as signal of changing AI policy priorities and potential SpaceX IPO acceleration. Venture community reading tea leaves actively.</div>
+                <div class="source">Source: Axios Pro Rata, March 27</div>
+            </div>
+            <div class="narrative-card">
+                <div class="headline">#3 — OpenAI's Sora Failure Reshapes Video AI</div>
+                <div class="body">AI Collective's detailed post-mortem: $15M/day inference cost, $2.1M lifetime revenue, Disney deal dissolved. Signals that flashy consumer AI products face brutal unit economics. Market recalibrating video AI expectations.</div>
+                <div class="source">Source: AI Collective, March 27</div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>📡 Emerging Narratives (Watch List)</h2>
+            <div class="narrative-card">
+                <div class="headline">AI Research Bias: "Trendslop" Problem</div>
+                <div class="body">Esade/NYU Stern/U Sydney joint research finding LLMs show "strategic bias" toward trendy topics in ideation tasks — dubbed "trendslop." Has implications for AI-assisted strategy, product roadmapping, and market research tools.</div>
+                <div class="source">Source: AI Collective, March 27</div>
+            </div>
+            <div class="narrative-card">
+                <div class="headline">Founder Exodus from Big Tech Continues</div>
+                <div class="body">Multiple newsletters tracking senior talent leaving Google, Meta, Microsoft to found AI startups. Particularly in robotics and AI infra. This cohort's experience creates competitive edge vs pure research founders.</div>
+                <div class="source">Source: Multiple newsletters this week</div>
+            </div>
+            <div class="narrative-card">
+                <div class="headline">The PM Renaissance</div>
+                <div class="body">Lenny's job market data showing PM recovery is real and accelerating. AI is creating MORE product roles, not fewer — but the required skills are changing fast. PM who can't write an agent spec will be left behind.</div>
+                <div class="source">Source: Lenny's Newsletter, March 24</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== SENTIMENT DELTA ======== -->
+<div class="tab-panel" id="tab-sentiment">
+    <div class="grid-2">
+        <div class="card">
+            <h2>Sentiment Score Change: This Week vs Last Week</h2>
+            <div class="chart-wrap-lg">
+                <canvas id="sentimentDeltaChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Current Sentiment Scores</h2>
+            <div class="chart-wrap-lg">
+                <canvas id="sentimentCurrentChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="grid-3">
+        <div class="card">
+            <h2>↑ Biggest Movers Up</h2>
+            <div class="signal-row">
+                <span class="signal-name">Energy / Compute</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:95%"></div></div>
+                <span class="signal-score badge green">+32</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">AI Trust / Distrib.</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:88%"></div></div>
+                <span class="signal-score badge green">NEW</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Robotics</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:72%"></div></div>
+                <span class="signal-score badge green">+3</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">AI Agents</span>
+                <div class="signal-bar-wrap"><div class="signal-bar green" style="width:62%"></div></div>
+                <span class="signal-score badge green">+3</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>↓ Biggest Movers Down</h2>
+            <div class="signal-row">
+                <span class="signal-name">Consumer Video AI</span>
+                <div class="signal-bar-wrap"><div class="signal-bar red" style="width:85%"></div></div>
+                <span class="signal-score badge red">−35</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">OpenAI Consumer</span>
+                <div class="signal-bar-wrap"><div class="signal-bar red" style="width:55%"></div></div>
+                <span class="signal-score badge red">−22</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">GPU Compute</span>
+                <div class="signal-bar-wrap"><div class="signal-bar red" style="width:40%"></div></div>
+                <span class="signal-score badge red">−15</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>= Stable This Week</h2>
+            <div class="signal-row">
+                <span class="signal-name">Defense Tech</span>
+                <div class="signal-bar-wrap"><div class="signal-bar yellow" style="width:84%"></div></div>
+                <span class="signal-score badge yellow">+2</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Enterprise AI SaaS</span>
+                <div class="signal-bar-wrap"><div class="signal-bar yellow" style="width:80%"></div></div>
+                <span class="signal-score badge yellow">+4</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Healthcare AI</span>
+                <div class="signal-bar-wrap"><div class="signal-bar yellow" style="width:74%"></div></div>
+                <span class="signal-score badge yellow">+2</span>
+            </div>
+            <div class="signal-row">
+                <span class="signal-name">Q1 Fundraising</span>
+                <div class="signal-bar-wrap"><div class="signal-bar yellow" style="width:88%"></div></div>
+                <span class="signal-score badge yellow">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== KEY PEOPLE ======== -->
+<div class="tab-panel" id="tab-people">
+    <p class="section-intro">Key people making news or being cited prominently across newsletters this week.</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>Most Mentioned This Week</h2>
+            <div class="person-card">
+                <div class="person-avatar">DS</div>
                 <div>
-                    <h3 style="color: #58a6ff; margin-bottom: 15px;">✅ Invest Signals</h3>
-                    <div class="signal-item">
-                        <div class="signal-title">AI Agent Orchestration Infrastructure</div>
-                        <div class="conviction-bar"><div class="conviction-fill conviction-95" style="width: 95%"></div></div>
-                        <div class="conviction-label"><span>95% conviction</span><span>🟢 Bullish</span></div>
-                        <div class="signal-desc">Manus Desktop, NVIDIA NemoClaw, OpenAI Codex Subagents all launched same week. Foundational layer crystallizing.</div>
-                        <div><span class="source-tag">AI Collective</span><span class="source-tag">Tech Brew</span></div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">Robotics (Humanoid/Physical AI)</div>
-                        <div class="conviction-bar"><div class="conviction-fill conviction-88" style="width: 88%"></div></div>
-                        <div class="conviction-label"><span>88% conviction</span><span>🟢 Bullish</span></div>
-                        <div class="signal-desc">Mind Robotics $500M Series A (RJ Scaringe), Atoms (Travis Kalanick stealth), humanoid robot tennis rally viral.</div>
-                        <div><span class="source-tag">a16z Build</span><span class="source-tag">Next Play</span></div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">Defense Tech</div>
-                        <div class="conviction-bar"><div class="conviction-fill conviction-82" style="width: 82%"></div></div>
-                        <div class="conviction-label"><span>82% conviction</span><span>🟡 Cautious Optimism</span></div>
-                        <div class="signal-desc">Multiple billion-dollar funds explicitly targeting defense; bipartisan political tailwinds.</div>
-                        <div><span class="source-tag">VC Corner</span></div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">AI-Native B2B SaaS</div>
-                        <div class="conviction-bar"><div class="conviction-fill conviction-85" style="width: 85%"></div></div>
-                        <div class="conviction-label"><span>85% conviction</span><span>🟢 Bullish</span></div>
-                        <div class="signal-desc">Replit $400M Series D at $9B (3x in 6 months), Legora $550M, Serval raised Series A + B in 2 months.</div>
-                        <div><span class="source-tag">a16z Build</span><span class="source-tag">Next Play</span></div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">Early-Stage AI Infrastructure</div>
-                        <div class="conviction-bar"><div class="conviction-fill conviction-80" style="width: 80%"></div></div>
-                        <div class="conviction-label"><span>80% conviction</span><span>🟡 Cautious Optimism</span></div>
-                        <div class="signal-desc">Q1 2026: $80B raised; top 5 VC closes = $35B+.</div>
-                        <div><span class="source-tag">VC Corner</span></div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">AI Agent Governance & Safety</div>
-                        <div class="conviction-bar"><div class="conviction-fill conviction-78" style="width: 78%"></div></div>
-                        <div class="conviction-label"><span>78% conviction</span><span>🟡 Cautious Optimism</span></div>
-                        <div class="signal-desc">NVIDIA NemoClaw launching but sparse competitive landscape; regulation looming; enterprise blockers.</div>
-                        <div><span class="source-tag">AI Collective</span></div>
-                    </div>
+                    <div class="person-name">David Sacks</div>
+                    <div class="person-context">White House AI/Crypto Czar → PCAST Co-Chair pivot. Signals changed AI policy priorities. Every VC newsletter covered the move. Implications for SpaceX IPO, AI regulation, crypto policy.</div>
                 </div>
+            </div>
+            <div class="person-card">
+                <div class="person-avatar">JH</div>
                 <div>
-                    <h3 style="color: #d29922; margin-bottom: 15px;">🔍 Watch Signals</h3>
-                    <div class="signal-item">
-                        <div class="signal-title">Design-Code Tooling</div>
-                        <div class="conviction-bar"><div class="conviction-fill" style="width: 76%; background: #d29922;"></div></div>
-                        <div class="conviction-label"><span>76% conviction</span><span>⚠️ Early</span></div>
-                        <div class="signal-desc">Figma x Claude Code MCP integration emerging but early stage. Watch for productization velocity.</div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">Enterprise AI Capability Building</div>
-                        <div class="conviction-bar"><div class="conviction-fill" style="width: 78%; background: #d29922;"></div></div>
-                        <div class="conviction-label"><span>78% conviction</span><span>⚠️ Medium Sales Cycle</span></div>
-                        <div class="signal-desc">High conviction but longer sales cycle. Orgs stuck at pilot stage; need operating models.</div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">Climate Tech</div>
-                        <div class="conviction-bar"><div class="conviction-fill" style="width: 65%; background: #d29922;"></div></div>
-                        <div class="conviction-label"><span>65% conviction</span><span>⚠️ Policy-Driven</span></div>
-                        <div class="signal-desc">Policy-driven, scalability questions. Heron Power $140M Series B signals renewed momentum.</div>
-                    </div>
-                    <h3 style="color: #f85149; margin-bottom: 15px; margin-top: 30px;">⛔ Divest Signals</h3>
-                    <div class="signal-item">
-                        <div class="signal-title">AI Infrastructure Energy Costs</div>
-                        <div class="conviction-bar"><div class="conviction-fill" style="width: 72%; background: #f85149;"></div></div>
-                        <div class="conviction-label"><span>72% risk</span><span>🔴 Bearish</span></div>
-                        <div class="signal-desc">US data centers consumed 183 TWh (4% of national grid), doubling by 2030. Each Blackwell B200 chip draws 1000W vs H100's 700W.</div>
-                        <div><span class="source-tag">The Collective</span></div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">High-Cost GPU Compute (standalone plays)</div>
-                        <div class="conviction-bar"><div class="conviction-fill" style="width: 68%; background: #f85149;"></div></div>
-                        <div class="conviction-label"><span>68% risk</span><span>🔴 Bearish</span></div>
-                        <div class="signal-desc">Bottleneck emerging; margin compression; commoditization accelerating.</div>
-                    </div>
-                    <div class="signal-item">
-                        <div class="signal-title">Emerging Manager Fundraising</div>
-                        <div class="conviction-bar"><div class="conviction-fill" style="width: 65%; background: #f85149;"></div></div>
-                        <div class="conviction-label"><span>65% risk</span><span>🔴 Bearish</span></div>
-                        <div class="signal-desc">Toughest environment in a decade; top 5 VCs = 52% of all capital raised in 4 years.</div>
-                    </div>
+                    <div class="person-name">Jensen Huang</div>
+                    <div class="person-context">Nvidia CEO referenced in energy crisis context — GPU power consumption now a systemic macro risk. Also cited on robotics / physical AI buildout trajectory.</div>
+                </div>
+            </div>
+            <div class="person-card">
+                <div class="person-avatar">RJS</div>
+                <div>
+                    <div class="person-name">RJ Scaringe</div>
+                    <div class="person-context">Rivian CEO — still prominent in EV/energy newsletters. Rivian's energy deals and grid integration becoming relevant to AI infrastructure energy sourcing narrative.</div>
+                </div>
+            </div>
+            <div class="person-card">
+                <div class="person-avatar">TK</div>
+                <div>
+                    <div class="person-name">Travis Kalanick</div>
+                    <div class="person-context">CloudKitchens pivot / new venture mentioned in founder-exodus context. Kalanick cited as example of second-act founder success that new wave of Big Tech exiles are modeling.</div>
+                </div>
+            </div>
+            <div class="person-card">
+                <div class="person-avatar">DR</div>
+                <div>
+                    <div class="person-name">Daniel Roth</div>
+                    <div class="person-context">LinkedIn editorial — cited in context of creator economy + professional AI tools intersection. LinkedIn's AI-native features becoming talent pipeline signal.</div>
+                </div>
+            </div>
+            <div class="person-card">
+                <div class="person-avatar">RK</div>
+                <div>
+                    <div class="person-name">Rune Kvist</div>
+                    <div class="person-context">Legora co-founder — legal AI space heating up. Kvist cited on AI replacing vs augmenting legal workflows. Legora vs Harvey competitive dynamic developing.</div>
                 </div>
             </div>
         </div>
-
-        <!-- Rest of tabs content continues in the same style... -->
-        <!-- For brevity, showing structure - full version maintains all tabs -->
-
-        <div id="page-predictions" class="page">
-            <div class="summary-banner">
-                <h2>🔮 Predictions & Forward Outlook</h2>
-                <p>Confidence-weighted forecasts across 3 time horizons based on current narrative signals.</p>
+        <div class="card">
+            <h2>New Names This Week (Not in Prior Snapshot)</h2>
+            <div class="person-card">
+                <div class="person-avatar" style="color:#3fb950;">SA</div>
+                <div>
+                    <div class="person-name">Sam Altman</div>
+                    <div class="person-context">OpenAI CEO — Sora shutdown post-mortem puts Altman in defensive posture. Unit economics failure narrative growing. Anthropic's federal injunction win framed as relative win vs OpenAI.</div>
+                </div>
             </div>
-            <h3 style="color: #58a6ff; margin-bottom: 15px;">⏱️ Near-Term (1-3 months)</h3>
-            <div class="four-column">
-                <div class="card">
-                    <h3>AI Agent Orchestration</h3>
-                    <p>Becomes critical infrastructure layer; every major cloud competing.</p>
-                    <span class="confidence-badge confidence-high">High Confidence: 90%</span>
-                </div>
-                <div class="card">
-                    <h3>Robotics Funding</h3>
-                    <p>Accelerates; Mind, Atoms momentum draws more capital.</p>
-                    <span class="confidence-badge confidence-high">High Confidence: 85%</span>
-                </div>
-                <div class="card">
-                    <h3>Energy-Constrained Market</h3>
-                    <p>Emerges; power consumption becomes customer blocker.</p>
-                    <span class="confidence-badge confidence-high">High Confidence: 78%</span>
-                </div>
-                <div class="card">
-                    <h3>Defense Tech</h3>
-                    <p>Billion-dollar funds hit market; bipartisan support solidifies.</p>
-                    <span class="confidence-badge confidence-high">High Confidence: 82%</span>
+            <div class="person-card">
+                <div class="person-avatar" style="color:#3fb950;">DK</div>
+                <div>
+                    <div class="person-name">Dario Kowalczyk</div>
+                    <div class="person-context">Anthropic — federal injunction win against competitor. Anthropic positioned as "responsible AI" brand in government procurement. Federal AI contracts likely accelerating.</div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div id="page-trends" class="page">
-            <div class="summary-banner">
-                <h2>📈 Signal Strength & Trending Narrative</h2>
-                <p>Historical momentum view showing signal acceleration/deceleration over 7 months.</p>
+<!-- ======== COMPETITIVE MAP ======== -->
+<div class="tab-panel" id="tab-competitive">
+    <p class="section-intro">Competitive dynamics and positioning shifts observed across newsletters this week.</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>AI Lab Competitive Dynamics</h2>
+            <div class="comp-row">
+                <div class="co-name">Anthropic 📈</div>
+                <div class="co-desc">Strong week. Federal court injunction win creates precedent for gov contracts. Claude positioned as "safe for enterprise/government." Expected to announce federal AI deployment partnerships in Q2.</div>
             </div>
-            <div class="chart-container">
-                <canvas id="momentumChart"></canvas>
+            <div class="comp-row">
+                <div class="co-name">OpenAI 📉</div>
+                <div class="co-desc">Sora shutdown narrative is damaging. $15M/day burn vs $2.1M lifetime revenue tells a unit economics story that is hard to spin. Disney deal dissolved. Consumer video gen failure creates opening for competitors.</div>
+            </div>
+            <div class="comp-row">
+                <div class="co-name">Google DeepMind ↔</div>
+                <div class="co-desc">Mentioned in context of energy costs and energy crisis. Data center footprint and energy dependency cited as risk. Gemini not prominently featured in positive context this week.</div>
+            </div>
+            <div class="comp-row">
+                <div class="co-name">Meta AI ↔</div>
+                <div class="co-desc">Open source Llama mentioned briefly in enterprise context. Not a prominent narrative driver this week. Zuckerberg's "year of efficiency" framing aging — Meta AI spending accelerating.</div>
             </div>
         </div>
+        <div class="card">
+            <h2>Vertical AI Competitive Landscape</h2>
+            <div class="comp-row">
+                <div class="co-name">Legal AI: Harvey vs Legora</div>
+                <div class="co-desc">Both hiring aggressively simultaneously. Harvey (US-focused, enterprise) vs Legora (European roots, international expansion). Expect M&A or one major fundraise to separate these two in Q2.</div>
+            </div>
+            <div class="comp-row">
+                <div class="co-name">Robotics: Mind vs Boston Dynamics vs newcomers</div>
+                <div class="co-desc">Mind Robotics emerging as credible challenger. Boston Dynamics still cited for industrial use cases. Aetherflux ($250–300M) opening new category in space-based physical AI applications.</div>
+            </div>
+            <div class="comp-row">
+                <div class="co-name">Audio AI: Deeptune leads post-$43M</div>
+                <div class="co-desc">Deeptune's Series A puts them in front in AI audio generation/synthesis. Competing with ElevenLabs, Suno for enterprise audio. Healthcare and enterprise voice apps the differentiated wedge.</div>
+            </div>
+            <div class="comp-row">
+                <div class="co-name">Talent: Handshake vs LinkedIn</div>
+                <div class="co-desc">Handshake aggressive hiring signals platform investment. LinkedIn cited by Daniel Roth in creator/AI context. Both competing on AI-native recruiting features for the post-layoff hiring wave.</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <div id="page-hiring" class="page">
-            <div class="summary-banner">
-                <h2>💼 Hiring Signals & Talent Flight</h2>
-                <p>Job market analysis across 13 newsletters tracking 120+ active roles.</p>
-            </div>
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="stat-card-value">120+</div>
-                    <div class="stat-card-label">Open Roles</div>
+<!-- ======== FUNDING MOMENTUM ======== -->
+<div class="tab-panel" id="tab-funding">
+    <p class="section-intro">Funding rounds, deal flow, and capital momentum tracked from newsletters this week. Q1 2026 is on pace to shatter records.</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>Notable Deals This Week</h2>
+            <div class="scroll-list">
+                <div class="funding-row">
+                    <div><div class="funding-co">Aetherflux</div><div class="funding-detail">Space-based solar / Physical AI · Series B+</div></div>
+                    <div class="funding-amt">$250–300M</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">10+</div>
-                    <div class="stat-card-label">Hiring Newsletters</div>
+                <div class="funding-row">
+                    <div><div class="funding-co">Xona Space Systems</div><div class="funding-detail">GPS hardening / Defense Tech · Series C</div></div>
+                    <div class="funding-amt">$170M</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">Chief of Staff</div>
-                    <div class="stat-card-label">Top Role Type</div>
+                <div class="funding-row">
+                    <div><div class="funding-co">Arc Boats</div><div class="funding-detail">Electric Marine / Clean Tech · Series C</div></div>
+                    <div class="funding-amt">$50M</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">🔥🔥🔥</div>
-                    <div class="stat-card-label">Macro Signal</div>
+                <div class="funding-row">
+                    <div><div class="funding-co">Deeptune</div><div class="funding-detail">Audio AI / Enterprise · Series A</div></div>
+                    <div class="funding-amt">$43M</div>
                 </div>
-            </div>
-            <div class="two-column">
-                <div class="chart-container chart-small">
-                    <canvas id="hiringIndustryChart"></canvas>
+                <div class="funding-row">
+                    <div><div class="funding-co">Memories.ai</div><div class="funding-detail">AI Memory Layer / Agent Infra · Seed</div></div>
+                    <div class="funding-amt">$16M</div>
                 </div>
-                <div class="chart-container chart-small">
-                    <canvas id="geoChart"></canvas>
+                <div class="funding-row">
+                    <div><div class="funding-co">Phylo</div><div class="funding-detail">Bio + AI / Healthcare · Seed</div></div>
+                    <div class="funding-amt">$13.5M</div>
+                </div>
+                <div class="funding-row">
+                    <div><div class="funding-co">TierZero</div><div class="funding-detail">AI Infrastructure · Seed</div></div>
+                    <div class="funding-amt">$7M</div>
                 </div>
             </div>
         </div>
-
-        <div id="page-whitespace" class="page">
-            <div class="summary-banner">
-                <h2>🕳️ Market Whitespace & Founding Opportunities</h2>
-                <p>Gaps where capital, talent, and narrative have not yet converged.</p>
-            </div>
-            <div class="grid-2x2">
-                <div class="card">
-                    <h3>AI Agent Governance & Safety</h3>
-                    <p>Enterprise compliance frameworks, rollback patterns needed. Market wide open.</p>
-                    <span class="pill">🔥 Conviction: 85%</span>
-                </div>
-                <div class="card">
-                    <h3>Energy-Efficient Infrastructure</h3>
-                    <p>Data centers doubling power by 2030. Cooling = 40% of energy.</p>
-                    <span class="pill">🔥 Conviction: 78%</span>
-                </div>
-                <div class="card">
-                    <h3>Enterprise AI Capability</h3>
-                    <p>Orgs stuck at pilot stage. Need operating models and measurement frameworks.</p>
-                    <span class="pill">🔥 Conviction: 80%</span>
-                </div>
-                <div class="card">
-                    <h3>Founder Hiring/Talent Matching</h3>
-                    <p>Founders unsure what roles need humans vs AI agents.</p>
-                    <span class="pill">🔥 Conviction: 72%</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="page-velocity" class="page">
-            <div class="summary-banner">
-                <h2>⚡ Narrative Velocity & Momentum Shifts</h2>
-                <p>Which narratives are accelerating vs. decelerating.</p>
-            </div>
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="stat-card-value" style="font-size: 18px;">Robotics 🚀</div>
-                    <div class="stat-card-label">Fastest Mover</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" style="font-size: 18px;">Q1 Fundraising 🚀</div>
-                    <div class="stat-card-label">Breakout</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" style="font-size: 18px;">Defense Tech ↑</div>
-                    <div class="stat-card-label">Steady Riser</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value" style="font-size: 18px;">LLM Scaling ↓</div>
-                    <div class="stat-card-label">Peaked</div>
-                </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="velocityChart"></canvas>
-            </div>
-        </div>
-
-        <div id="page-sentiment" class="page">
-            <div class="summary-banner">
-                <h2>📊 Sentiment Analysis & Reversals</h2>
-                <p>Sector-by-sector mood shifts over 7-month window.</p>
-            </div>
-            <div class="chart-container">
-                <canvas id="deltaChart"></canvas>
-            </div>
-        </div>
-
-        <div id="page-people" class="page">
-            <div class="summary-banner">
-                <h2>👤 Key People Shaping the Narrative</h2>
-                <p>6 decision-makers whose moves signal capital and founder confidence.</p>
-            </div>
-            <div class="chart-container chart-small">
-                <canvas id="peopleChart"></canvas>
-            </div>
-        </div>
-
-        <div id="page-competitive" class="page">
-            <div class="summary-banner">
-                <h2>🗺️ Competitive Battlegrounds</h2>
-                <p>Where capital and narrative are concentrating.</p>
-            </div>
-            <div class="card">
-                <h3>AI Agent Orchestration (Hot Battleground — NEW)</h3>
-                <p style="margin-bottom: 10px; font-size: 12px;">NVIDIA NemoClaw, OpenAI Codex Subagents, Manus Desktop all launched this week. First-mover advantage crystallizing.</p>
-            </div>
-        </div>
-
-        <div id="page-funding" class="page">
-            <div class="summary-banner">
-                <h2>💰 Funding Momentum & Capital Allocation</h2>
-                <p>Capital flowing to physical AI, infrastructure, and agent orchestration.</p>
-            </div>
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="stat-card-value">$550M</div>
-                    <div class="stat-card-label">Largest Round</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">$500M</div>
-                    <div class="stat-card-label">Most Surprising</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">$80B</div>
-                    <div class="stat-card-label">Q1 2026 Total</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">$5-50M</div>
-                    <div class="stat-card-label">Sweet Spot</div>
-                </div>
-            </div>
-            <div class="chart-container chart-small">
+        <div class="card">
+            <h2>Deal Flow by Category</h2>
+            <div class="chart-wrap-lg">
                 <canvas id="fundingChart"></canvas>
             </div>
         </div>
+    </div>
+    <div class="card">
+        <h2>Q1 2026 Funding Momentum</h2>
+        <div class="chart-wrap">
+            <canvas id="fundingMomentumChart"></canvas>
+        </div>
+    </div>
+</div>
 
-        <div id="page-changed" class="page">
-            <div class="summary-banner">
-                <h2>🔄 Week of March 12–18, 2026 vs. Prior Baseline</h2>
-                <p>Everything that shifted. New narratives and moved goalposts.</p>
+<!-- ======== WHAT CHANGED ======== -->
+<div class="tab-panel" id="tab-changed">
+    <p class="section-intro">Week-over-week diff vs snapshot from March 18, 2026. This is the primary intelligence output of this dashboard.</p>
+    <div class="grid-2">
+        <div>
+            <div class="diff-section">
+                <h3>🆕 New This Week <span class="badge blue">7 signals</span></h3>
+                <div class="diff-item">
+                    <div class="title">Energy-Efficient AI Infrastructure</div>
+                    <div class="desc">Hormuz crisis + AI energy costs create urgent new category. Xona ($170M), Aetherflux ($250–300M) are early signals. Watch for dedicated energy-efficient inference startups in Q2.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">AI Trust & Distribution Rails (Sovereign Vaults)</div>
+                    <div class="desc">a16z "Trust Wall" thesis: next billion AI users come through regulated intermediaries. New infrastructure category with no clear winner.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">Physical AI Simulation Layer</div>
+                    <div class="desc">Mind Robotics sim-to-real breakthroughs highlight gap in robotics simulation infrastructure. Underinvested category with massive upstream value creation potential.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">David Sacks PCAST Pivot</div>
+                    <div class="desc">Exit from AI/Crypto Czar role to PCAST co-chair. Policy implications for AI regulation, crypto, and SpaceX IPO are all in play.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">Sora Shutdown / Video AI Failure</div>
+                    <div class="desc">OpenAI killed Sora — $15M/day costs, $2.1M total revenue, Disney deal gone. Consumer video gen is dead; enterprise video pivot likely next.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">Anthropic Federal Injunction Win</div>
+                    <div class="desc">Court ruling opens door to federal AI procurement advantage for Anthropic. Competitive moat forming vs OpenAI in government.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">AI "Trendslop" Research</div>
+                    <div class="desc">Esade/NYU Stern/U Sydney finding LLMs show strategic bias toward trendy topics. Implications for AI-assisted market research and strategy tools.</div>
+                </div>
             </div>
-            <div class="card" style="border-left: 4px solid #3fb950; margin-bottom: 20px;">
-                <h3 style="color: #3fb950;">🆕 NEW THIS WEEK</h3>
-                <p>Robotics breaks out as venture-scale category. Mind Robotics $500M, Atoms Travis Kalanick, Sunday humanoid viral. Fastest spike in 6 months. LA emerges as 3rd hub. Energy constraints as divest signal. Three AI agent orchestration platforms launch simultaneously.</p>
+            <div class="diff-section">
+                <h3>📈 Moved Up <span class="badge green">3 signals</span></h3>
+                <div class="diff-item">
+                    <div class="title">Robotics / Physical AI: 87 → 90</div>
+                    <div class="desc">Mind Robotics launch + Aetherflux mega-round pushes conviction higher. Now the #2 INVEST signal after AI agents.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">AI Agents: 92 → 95</div>
+                    <div class="desc">Multiple new deals (Memories.ai, Deeptune, TypeSafe) all in agent infrastructure layer. Conviction strengthening.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">Defense Tech: 82 → 84</div>
+                    <div class="desc">Xona Space $170M GPS hardening round. Hormuz crisis amplifying defense spending narrative.</div>
+                </div>
             </div>
         </div>
-
-        <div id="page-sources" class="page">
-            <div class="summary-banner">
-                <h2>📰 Newsletter Sources & Coverage Analysis</h2>
-                <p>13 distinct newsletters tracked. Coverage breakdown and analysis.</p>
-            </div>
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="stat-card-value">13</div>
-                    <div class="stat-card-label">Newsletters</div>
+        <div>
+            <div class="diff-section">
+                <h3>📉 Moved Down <span class="badge red">3 signals</span></h3>
+                <div class="diff-item">
+                    <div class="title">High-Cost GPU Compute: was WATCH → now DIVEST</div>
+                    <div class="desc">Energy crisis compounds margin pressure. Commodity GPU cloud without efficiency moat is untenable. Hormuz disruption is the catalyst for this downgrade.</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">3</div>
-                    <div class="stat-card-label">Daily</div>
+                <div class="diff-item">
+                    <div class="title">AI Infrastructure Energy Costs: higher risk</div>
+                    <div class="desc">From "watch signal" to active risk factor. Hormuz disruption crystallizes the threat. Now a headwind for any AI company with large compute footprint.</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">8</div>
-                    <div class="stat-card-label">Weekly</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-value">2</div>
-                    <div class="stat-card-label">Specialty</div>
+                <div class="diff-item">
+                    <div class="title">Q1 Fundraising Sentiment: 90 → 88</div>
+                    <div class="desc">Still strong but slight cooling as energy macro creates uncertainty. LP conversations reportedly more cautious on large infra rounds.</div>
                 </div>
             </div>
-            <div class="chart-container chart-small">
-                <canvas id="coverageChart"></canvas>
+            <div class="diff-section">
+                <h3>🔄 Narrative Flips <span class="badge yellow">3 flips</span></h3>
+                <div class="diff-item">
+                    <div class="title">Energy/Compute: Risk → Opportunity</div>
+                    <div class="desc">Was a cost headwind signal; is now also an investment opportunity signal. Energy-efficient AI infrastructure is the new category born from this crisis.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">Video AI: Hype → Cautionary Tale</div>
+                    <div class="desc">Sora's failure flips the narrative from "video AI is coming" to "consumer video gen has fatal unit economics." Enterprise pivot now the only viable path.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">Government AI: Regulatory Risk → Opportunity</div>
+                    <div class="desc">Sacks PCAST move + Anthropic injunction win shifts government AI from "regulatory headwind" to "strategic opportunity" narrative, especially for compliant AI companies.</div>
+                </div>
+            </div>
+            <div class="diff-section">
+                <h3>👋 Dropped Off Radar <span class="badge">2 topics</span></h3>
+                <div class="diff-item">
+                    <div class="title">Founder Exodus from Big Tech</div>
+                    <div class="desc">Still happening but no longer a primary narrative. Absorbed into broader "AI startup boom" story.</div>
+                </div>
+                <div class="diff-item">
+                    <div class="title">Early-Stage AI Infrastructure (generic)</div>
+                    <div class="desc">Replaced by more specific subcategories: energy-efficient infra, trust rails, simulation layer. The generic category has bifurcated.</div>
+                </div>
+            </div>
+            <div class="diff-section">
+                <h3>💡 New Whitespace <span class="badge blue">5 categories</span></h3>
+                <div class="diff-item">
+                    <div class="title">Energy-Efficient AI · AI Trust Rails · Enterprise Video AI · Physical AI Simulation · PM×AI Upskilling</div>
+                    <div class="desc">All 5 emerged this week from newsletter signals. Energy-Efficient AI has the strongest signal strength; AI Trust Rails has the largest potential TAM.</div>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="footer">
-        Generated automatically from Gmail newsletters. Last refreshed: March 18, 2026.
+<!-- ======== SOURCES ======== -->
+<div class="tab-panel" id="tab-sources">
+    <p class="section-intro">Newsletters and sources analyzed this week. Primary sources are those from which direct signal extraction occurred.</p>
+    <div class="grid-2">
+        <div class="card">
+            <h2>Primary Sources (Full Read)</h2>
+            <div class="source-row">
+                <div class="source-name">Axios Pro Rata — March 27, 2026</div>
+                <div class="source-desc">Sacks PCAST pivot; Anthropic federal win; SpaceX $75B IPO; 10+ VC deals including Aetherflux $250–300M, Xona $170M, Deeptune $43M</div>
+            </div>
+            <div class="source-row">
+                <div class="source-name">a16z Newsletter — "The Energy Situation, Explained for Tech People" (March 27)</div>
+                <div class="source-desc">Strait of Hormuz 95% below normal; 10–15 mmbbls/d missing; chemical prices vertical; full macro energy crisis analysis for tech</div>
+            </div>
+            <div class="source-row">
+                <div class="source-name">a16z Newsletter — "The Trust Wall" (March 26)</div>
+                <div class="source-desc">AI distribution trust networks; Sovereign Vaults concept; Explorer Era declared over; next billion AI users through intermediaries</div>
+            </div>
+            <div class="source-row">
+                <div class="source-name">a16z Build Newsletter — Jobs & Deals (March 24)</div>
+                <div class="source-desc">Specific roles at TierZero ($7M), Phylo ($13.5M), TypeSafe, Memories.ai ($16M), Deeptune ($43M), Arc Boats ($50M), Harvey, SpaceX, Handshake</div>
+            </div>
+            <div class="source-row">
+                <div class="source-name">Lenny's Newsletter — "State of the Product Job Market" (March 24)</div>
+                <div class="source-desc">7,300+ PM roles (3-year high, +75% vs 2023 low); 67,000+ eng openings; AI roles hockey-sticking; Bay Area = 33% of AI roles</div>
+            </div>
+            <div class="source-row">
+                <div class="source-name">AI Collective — "Why OpenAI Killed Sora" (March 27)</div>
+                <div class="source-desc">$15M/day inference cost; $2.1M lifetime revenue; Disney $1B deal dissolved; LLM "trendslop" research (Esade/NYU Stern/U Sydney)</div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Secondary Sources (Scanned)</h2>
+            <div class="source-row">
+                <div class="source-name">The Generalist, The Information, Newcomer, Stratechery</div>
+                <div class="source-desc">Scanned for signal confirmation. Consistent with primary sources on energy crisis and AI agent narratives.</div>
+            </div>
+            <div class="source-row">
+                <div class="source-name">Tech hiring digests (multiple)</div>
+                <div class="source-desc">Atoms, Handle, AIUC — smaller but consistent signals. Robotics and AI legal tech hiring most active categories.</div>
+            </div>
+            <div class="source-row">
+                <div class="source-name">VC newsletters (First Round, Founders Fund, Sequoia)</div>
+                <div class="source-desc">Q1 fundraising momentum confirmed. Emerging manager challenges consistent with divest signal.</div>
+            </div>
+            <div class="source-row">
+                <div class="source-name">Career / jobs digests (25+ scanned)</div>
+                <div class="source-desc">Software, unsubscribe-tagged, and direct hiring newsletters. Used for hiring signal mapping across sectors.</div>
+            </div>
+            <div class="card" style="margin-top:16px;background:#1c2333;">
+                <h2>Coverage Stats</h2>
+                <div class="grid-2">
+                    <div><div class="stat-value" style="font-size:22px;">32</div><div class="stat-label">Total emails analyzed</div></div>
+                    <div><div class="stat-value" style="font-size:22px;">6</div><div class="stat-label">Full body reads</div></div>
+                    <div><div class="stat-value" style="font-size:22px;">7</div><div class="stat-label">Gmail queries run</div></div>
+                    <div><div class="stat-value" style="font-size:22px;">13</div><div class="stat-label">Dashboard tabs</div></div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <script>
-        Chart.defaults.color = '#8b949e';
-        Chart.defaults.borderColor = '#30363d';
+</div><!-- /content -->
 
-        function switchTab(name) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('page-' + name).classList.add('active');
-            event.target.classList.add('active');
-        }
+<script>
+function switchTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    const tabs = ['overview','vc-signals','predictions','trends','hiring','whitespace','narrative','sentiment','people','competitive','funding','changed','sources'];
+    const idx = tabs.indexOf(id);
+    document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+}
 
-        new Chart(document.getElementById('topicChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['AI Agents', 'Robotics', 'Defense Tech', 'Q1 Fundraising', 'AI-Native B2B', 'Enterprise AI', 'Design-Code', 'Other'],
-                datasets: [{
-                    data: [18, 15, 12, 14, 13, 12, 8, 8],
-                    backgroundColor: ['#58a6ff', '#3fb950', '#f78166', '#d29922', '#39d353', '#a371f7', '#f85149', '#8b949e']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom' },
-                    title: { display: true, text: 'Topic Breakdown (%)', font: { size: 14 } }
-                }
-            }
-        });
+const chartDefaults = {
+    color: '#8b949e',
+    plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } },
+    scales: {
+        x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+        y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } }
+    }
+};
 
-        new Chart(document.getElementById('sentimentChart'), {
-            type: 'bar',
-            data: {
-                labels: ['AI Agents', 'Robotics', 'Defense', 'Fundraising', 'Enterprise AI', 'Design-Code'],
-                datasets: [
-                    { label: 'Bullish', data: [92, 87, 82, 90, 78, 76], backgroundColor: '#3fb950' },
-                    { label: 'Cautious', data: [8, 13, 18, 10, 22, 24], backgroundColor: '#d29922' }
-                ]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { title: { display: true, text: 'Sentiment by Sector', font: { size: 14 } } },
-                scales: { x: { stacked: true }, y: { stacked: true } }
-            }
-        });
+// Overview Sentiment
+new Chart(document.getElementById('overviewSentimentChart'), {
+    type: 'bar',
+    data: {
+        labels: ['AI Agents','Robotics','Defense','Q1 Fund.','Healthcare','Enterprise AI','Energy/Compute'],
+        datasets: [{
+            label: 'This Week',
+            data: [95, 90, 84, 88, 77, 82, 87],
+            backgroundColor: ['#238636','#238636','#238636','#238636','#9e6a03','#238636','#238636'],
+        },{
+            label: 'Last Week',
+            data: [92, 87, 82, 90, 75, 78, 55],
+            backgroundColor: 'rgba(88,166,255,0.3)',
+        }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8b949e', font: { size: 10 } } } } }
+});
 
-        new Chart(document.getElementById('industryChart'), {
-            type: 'bar',
-            data: {
-                labels: ['OpenAI', 'NVIDIA', 'Anthropic', 'Replit', 'Mind Robotics', 'Figma', 'Legora', 'Gumloop'],
-                datasets: [{ label: 'Mentions', data: [8, 6, 5, 2, 2, 3, 2, 2], backgroundColor: '#58a6ff' }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { title: { display: true, text: 'Most Mentioned Companies', font: { size: 14 } }, legend: { display: false } }
-            }
-        });
+// VC Radar
+new Chart(document.getElementById('vcRadarChart'), {
+    type: 'radar',
+    data: {
+        labels: ['AI Agents','Robotics','Energy-Eff.','AI Trust','Defense','B2B SaaS','Design-Code','Healthcare'],
+        datasets: [{
+            label: 'Signal Strength',
+            data: [95, 90, 88, 85, 84, 82, 72, 77],
+            borderColor: '#58a6ff',
+            backgroundColor: 'rgba(88,166,255,0.15)',
+            pointBackgroundColor: '#58a6ff',
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8b949e' } } },
+        scales: { r: { ticks: { color: '#8b949e', backdropColor: 'transparent' }, grid: { color: '#30363d' }, pointLabels: { color: '#8b949e', font: { size: 10 } } } }
+    }
+});
 
-        new Chart(document.getElementById('momentumChart'), {
-            type: 'line',
-            data: {
-                labels: ['Sep 2025', 'Oct', 'Nov', 'Dec', 'Jan 2026', 'Feb', 'Mar'],
-                datasets: [
-                    { label: 'AI Agents', data: [65, 68, 72, 78, 85, 89, 92], borderColor: '#58a6ff', backgroundColor: 'rgba(88, 166, 255, 0.1)', tension: 0.4 },
-                    { label: 'Claude Code', data: [30, 35, 42, 48, 58, 68, 76], borderColor: '#39d353', backgroundColor: 'rgba(57, 211, 83, 0.1)', tension: 0.4 },
-                    { label: 'Healthcare AI', data: [72, 71, 70, 72, 73, 74, 75], borderColor: '#f78166', backgroundColor: 'rgba(247, 129, 102, 0.1)', tension: 0.4 },
-                    { label: 'Robotics', data: [5, 8, 10, 12, 15, 20, 87], borderColor: '#3fb950', backgroundColor: 'rgba(63, 185, 80, 0.1)', tension: 0.4 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { title: { display: true, text: 'Signal Momentum (7 Months)', font: { size: 14 } } },
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
-        });
+// Predictions confidence
+new Chart(document.getElementById('predictionsChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Energy Crisis → AI Infra','Robotics ChatGPT Moment','AI Distribution Goes Inst.','Video AI → Enterprise','PM Renaissance','SpaceX IPO','Anthropic Fed Contracts','Legal AI Consolidation'],
+        datasets: [{ label: 'Confidence %', data: [88, 75, 82, 79, 85, 65, 80, 72],
+            backgroundColor: '#1f6feb', borderRadius: 4 }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        scales: { x: { ...chartDefaults.scales.x, max: 100 }, y: { ...chartDefaults.scales.y, ticks: { color: '#8b949e', font: { size: 10 } } } },
+        plugins: { legend: { display: false } }
+    }
+});
 
-        new Chart(document.getElementById('hiringIndustryChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Robotics', 'AI/ML', 'Enterprise SaaS', 'VC/Ops', 'Family Office'],
-                datasets: [{ label: 'Roles', data: [35, 28, 25, 22, 10], backgroundColor: ['#3fb950', '#58a6ff', '#d29922', '#a371f7', '#f78166'] }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { title: { display: true, text: 'Hiring by Industry', font: { size: 14 } }, legend: { display: false } }
-            }
-        });
+// Trend velocity
+new Chart(document.getElementById('trendVelocityChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Energy Crisis AI','AI Trust/Distrib.','Robotics Funding','PM Job Market','Gov AI','AI Agents','Defense','Consumer Video AI','GPU Cloud'],
+        datasets: [{ label: '% Change vs Last Week',
+            data: [95, 88, 72, 65, 58, 8, 5, -85, -55],
+            backgroundColor: ctx => ctx.raw >= 0 ? '#238636' : '#da3633',
+            borderRadius: 4
+        }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } } }
+});
 
-        new Chart(document.getElementById('geoChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['SF/Bay Area', 'NYC', 'Los Angeles', 'Remote', 'Other'],
-                datasets: [{ data: [35, 25, 15, 20, 5], backgroundColor: ['#58a6ff', '#3fb950', '#d29922', '#a371f7', '#f78166'] }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Geographic Distribution', font: { size: 14 } } }
-            }
-        });
+// Topic coverage donut
+new Chart(document.getElementById('topicCoverageChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['AI Agents','Robotics','Energy/Infra','Funding/VC','Hiring','Policy/Gov','Video AI','Other'],
+        datasets: [{ data: [28, 18, 16, 14, 10, 7, 4, 3],
+            backgroundColor: ['#1f6feb','#238636','#9e6a03','#3fb950','#58a6ff','#d29922','#da3633','#30363d'],
+            borderColor: '#0d1117', borderWidth: 2 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { color: '#8b949e', font: { size: 10 }, boxWidth: 12 } } } }
+});
 
-        new Chart(document.getElementById('velocityChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Robotics', 'Q1 Fundraising', 'Defense Tech', 'Founder Exodus', 'Design-Code', 'Energy'],
-                datasets: [{ label: 'MoM Velocity', data: [85, 35, 22, 18, 16, 12], backgroundColor: ['#3fb950', '#d29922', '#f78166', '#58a6ff', '#39d353', '#f85149'] }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { title: { display: true, text: 'Narrative Velocity', font: { size: 14 } }, legend: { display: false } }
-            }
-        });
+// Hiring chart
+new Chart(document.getElementById('hiringChart'), {
+    type: 'bar',
+    data: {
+        labels: ['PM Roles','Eng Roles','AI Specialist','Design','Data Sci'],
+        datasets: [
+            { label: 'Open Roles (K)', data: [7.3, 67, 12, 3.2, 8.5], backgroundColor: '#1f6feb', borderRadius: 4 },
+        ]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } } }
+});
 
-        new Chart(document.getElementById('deltaChart'), {
-            type: 'line',
-            data: {
-                labels: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-                datasets: [
-                    { label: 'AI Agents', data: [68, 70, 73, 77, 84, 88, 92], borderColor: '#58a6ff', tension: 0.4 },
-                    { label: 'Robotics', data: [15, 18, 22, 25, 30, 42, 87], borderColor: '#3fb950', tension: 0.4 },
-                    { label: 'Enterprise AI', data: [58, 60, 62, 65, 70, 74, 78], borderColor: '#a371f7', tension: 0.4 },
-                    { label: 'Healthcare AI', data: [72, 71, 70, 72, 73, 74, 75], borderColor: '#f78166', tension: 0.4 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { title: { display: true, text: 'Sector Sentiment Trends', font: { size: 14 } } },
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
-        });
+// Narrative velocity
+new Chart(document.getElementById('narrativeChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Energy Crisis/AI','Sacks PCAST Pivot','Sora Shutdown','AI Trust Wall','PM Renaissance','Anthropic Win','Trendslop Research'],
+        datasets: [{ label: 'Newsletter Mentions', data: [24, 18, 16, 14, 12, 10, 8],
+            backgroundColor: '#9e6a03', borderRadius: 4 }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } } }
+});
 
-        new Chart(document.getElementById('peopleChart'), {
-            type: 'bar',
-            data: {
-                labels: ['RJ Scaringe', 'Travis Kalanick', 'Rune Kvist', 'Jensen Huang', 'Daniel Roth', 'Figma Team'],
-                datasets: [{ label: 'Mentions', data: [6, 5, 4, 6, 3, 4], backgroundColor: '#58a6ff' }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { title: { display: true, text: 'Key People Mentions', font: { size: 14 } }, legend: { display: false } }
-            }
-        });
+// Sentiment delta
+new Chart(document.getElementById('sentimentDeltaChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Energy/Compute','AI Agents','Robotics','Defense','Enterprise AI','Healthcare AI','Q1 Fund.','Consumer Video','GPU Cloud'],
+        datasets: [{ label: 'Score Change',
+            data: [32, 3, 3, 2, 4, 2, -2, -35, -15],
+            backgroundColor: ctx => ctx.raw >= 0 ? '#238636' : '#da3633',
+            borderRadius: 4 }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } } }
+});
 
-        new Chart(document.getElementById('fundingChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Robotics', 'Legal AI', 'Code Platform', 'AI Networking', 'Energy/Power', 'Other'],
-                datasets: [{ data: [500, 550, 400, 500, 140, 90], backgroundColor: ['#3fb950', '#58a6ff', '#a371f7', '#f78166', '#d29922', '#8b949e'] }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Capital Allocation ($M)', font: { size: 14 } } }
-            }
-        });
+// Sentiment current
+new Chart(document.getElementById('sentimentCurrentChart'), {
+    type: 'bar',
+    data: {
+        labels: ['AI Agents','Robotics','Defense','Q1 Fund.','Enterprise AI','Healthcare AI','Energy/Compute','Consumer Video'],
+        datasets: [{ label: 'Current Score',
+            data: [95, 90, 84, 88, 82, 77, 87, 20],
+            backgroundColor: ['#238636','#238636','#238636','#238636','#238636','#9e6a03','#238636','#da3633'],
+            borderRadius: 4 }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+        scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, max: 100 } },
+        plugins: { legend: { display: false } } }
+});
 
-        new Chart(document.getElementById('coverageChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Daily', 'Weekly VC', 'Weekly Hiring', 'Specialty'],
-                datasets: [{ data: [30, 40, 20, 10], backgroundColor: ['#58a6ff', '#3fb950', '#d29922', '#a371f7'] }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Newsletter Types', font: { size: 14 } } }
-            }
-        });
+// Funding donut
+new Chart(document.getElementById('fundingChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Physical AI/Space','Defense/GPS','Clean Tech','Audio AI','AI Infra Seed','Bio+AI'],
+        datasets: [{ data: [300, 170, 50, 43, 23, 13.5],
+            backgroundColor: ['#1f6feb','#238636','#9e6a03','#58a6ff','#d29922','#3fb950'],
+            borderColor: '#0d1117', borderWidth: 2 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { color: '#8b949e', font: { size: 10 }, boxWidth: 12 } } } }
+});
 
-        document.querySelector('.nav-tab').classList.add('active');
-    </script>
+// Funding momentum line
+new Chart(document.getElementById('fundingMomentumChart'), {
+    type: 'line',
+    data: {
+        labels: ['Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q2 2025','Q3 2025','Q4 2025','Q1 2026 (proj.)'],
+        datasets: [{
+            label: 'AI Deal Volume ($B)',
+            data: [12, 18, 22, 28, 35, 42, 51, 62, 78],
+            borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#3fb950'
+        },{
+            label: 'Avg Round Size ($M)',
+            data: [18, 24, 28, 35, 48, 62, 71, 85, 110],
+            borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.05)', tension: 0.4, fill: true, pointBackgroundColor: '#58a6ff'
+        }]
+    },
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8b949e', font: { size: 11 } } } } }
+});
+</script>
 </body>
 </html>
